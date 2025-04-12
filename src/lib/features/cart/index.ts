@@ -2,131 +2,133 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { getCartItems, getCouponById, getVisibleCoupons } from "./action";
 
-interface Size {
-  id: string;
-  price: number;
-  stock: number;
-  type: string;
-}
-
-interface CartItem {
-  id: string | number;
-  size: Size;
-  count: number;
-}
-
-interface CartState {
-  items: CartItem[];
-  totalAmount: number;
-}
-
-const initialState: CartState = {
-  items: [],
-  totalAmount: 0,
-};
-
-export const cartSlice = createSlice({
+const cartSlice = createSlice({
   name: "cart",
-  initialState,
+  initialState: {
+    items: [], // Array of { productId, quantity }
+    products: [], // Full product details fetched from API
+    summary: {
+      totalItems: 0,
+      totalQuantity: 0,
+      cartTotal: 0,
+      mrpTotal: 0,
+      discount: 0,
+      deliveryFee: 0,
+      tax: 0,
+    },
+    loading: false,
+    error: null,
+  },
   reducers: {
-    setInitialState: () => initialState,
-    addToCart: (
-      state,
-      action: PayloadAction<{
-        id: string | number;
-        size: Size;
-        quantity: number;
-      }>
-    ) => {
-      const { id, size, quantity } = action.payload;
+    addToCart: (state, action) => {
+      const { productId, quantity = 1 } = action.payload;
       const existingItem = state.items.find(
-        (item) => item.id === id && item.size.id === size.id
+        (item) => item.productId === productId
       );
+
       if (existingItem) {
-        existingItem.count += 1;
+        // Update quantity if item already exists
+        existingItem.quantity += quantity;
       } else {
-        state.items.push({ id, size, count: quantity });
+        // Add new item
+        state.items.push({ productId, quantity });
       }
     },
-    increaseCount: (
-      state,
-      action: PayloadAction<{ id: string | number; sizeId: string }>
-    ) => {
-      const { id, sizeId } = action.payload;
-      const item = state.items.find(
-        (item) => item.id === id && item.size.id === sizeId
-      );
-      if (item) {
-        item.count += 1;
-      }
+
+    removeFromCart: (state, action) => {
+      const productId = action.payload;
+      state.items = state.items.filter((item) => item.productId !== productId);
     },
-    decreaseCount: (
-      state,
-      action: PayloadAction<{ id: string | number; sizeId: string }>
-    ) => {
-      const { id, sizeId } = action.payload;
-      const item = state.items.find(
-        (item) => item.id === id && item.size.id === sizeId
+
+    updateQuantity: (state, action) => {
+      const { productId, quantity } = action.payload;
+      const existingItem = state.items.find(
+        (item) => item.productId === productId
       );
-      if (item) {
-        if (item.count > 1) {
-          item.count -= 1;
-        } else {
+
+      if (existingItem) {
+        if (quantity <= 0) {
+          // Remove item if quantity is 0 or negative
           state.items = state.items.filter(
-            (i) => !(i.id === id && i.size.id === sizeId)
+            (item) => item.productId !== productId
           );
+        } else {
+          // Update quantity
+          existingItem.quantity = quantity;
         }
       }
     },
-    removeFromCart: (
-      state,
-      action: PayloadAction<{ id: string | number; sizeId: any }>
-    ) => {
-      const { id, sizeId } = action.payload;
-      state.items = state.items.filter(
-        (item) => !(item.id === id && item.size.id === sizeId)
-      );
-    },
-    emptyCart: (state) => {
+
+    clearCart: (state) => {
       state.items = [];
-      state.totalAmount = 0;
-    },
-    setTotalAmount: (state, action: PayloadAction<number>) => {
-      state.totalAmount = action.payload;
-    },
-    updateCartItemPrice: (
-      state,
-      action: PayloadAction<{
-        id: string | number;
-        sizeId: string;
-        newPrice: number;
-      }>
-    ) => {
-      const { id, sizeId, newPrice } = action.payload;
-      const item = state.items.find(
-        (item) => item.id === id && item.size.id === sizeId
-      );
-      if (item) {
-        item.size.price = newPrice;
-      }
+      state.products = [];
+      state.summary = {
+        totalItems: 0,
+        totalQuantity: 0,
+        cartTotal: 0,
+        mrpTotal: 0,
+        discount: 0,
+        deliveryFee: 0,
+        tax: 0,
+      };
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(getCartItems.fulfilled, (state, { payload }) => {});
-    builder.addCase(getVisibleCoupons.fulfilled, (state, { payload }) => {});
-    builder.addCase(getCouponById.fulfilled, (state, { payload }) => {});
+    builder
+      .addCase(getCartItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCartItems.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products;
+
+        // Update cart summary if provided
+        if (action.payload.cartSummary) {
+          state.summary = action.payload.cartSummary;
+        } else {
+          // Calculate summary if not provided by API
+          const products = action.payload.products || [];
+          const totalQuantity = state.items.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+          );
+
+          // Calculate totals
+          let cartTotal = 0;
+          let mrpTotal = 0;
+
+          products.forEach((product) => {
+            const cartItem = state.items.find(
+              (item) => item.productId === product._id
+            );
+            if (cartItem) {
+              cartTotal += product.price * cartItem.quantity;
+              mrpTotal += (product.mrp || product.price) * cartItem.quantity;
+            }
+          });
+
+          state.summary = {
+            totalItems: products.length,
+            totalQuantity,
+            cartTotal,
+            mrpTotal,
+            discount: mrpTotal - cartTotal,
+            deliveryFee: cartTotal < 499 ? 50 : 0, // Free delivery above 499
+            tax: Math.round(cartTotal * 0.05), // 5% tax
+          };
+        }
+      })
+      .addCase(getCartItems.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload?.msg || "Failed to fetch cart products";
+      });
   },
 });
 
-export const {
-  setInitialState,
-  addToCart,
-  increaseCount,
-  decreaseCount,
-  removeFromCart,
-  emptyCart,
-  setTotalAmount,
-  updateCartItemPrice,
-} = cartSlice.actions;
-export { getCartItems, getCouponById, getVisibleCoupons };
+export const { addToCart, removeFromCart, updateQuantity, clearCart } =
+  cartSlice.actions;
+
+  export {getCartItems}
+
 export default cartSlice.reducer;

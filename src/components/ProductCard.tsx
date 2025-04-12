@@ -1,149 +1,143 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import Ribbon from "./Ribbon";
-import { Heart } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { toggleItem } from "@/lib/features/wishlist";
-import toast from "react-hot-toast";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Star, ShoppingCart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useDispatch } from "react-redux";
+import { addToCart } from "@/lib/features/cart";
 
 const ProductCard = ({ product }) => {
-  const {
-    name,
-    image = [],
-    newArrival,
-    featured,
-    latest,
-    actualPrice,
-    offerPrice,
-    description,
-    stock,
-  } = product;
-
-  const getRibbonText = () => {
-    if (stock === 0) return "No Stocks Left";
-    if (stock < 10) return "Low Stock";
-    if (latest) return "Latest";
-    if (newArrival) return "New Arrival";
-    return null;
-  };
-
-  const wishlistItems = useSelector((state: any) => state.wishlist.items);
+  const router = useRouter();
   const dispatch = useDispatch<any>();
+  const navigateToProduct = () => {
+    router.push(`/product/${product.id}`);
+  };
+  console.log(product, "prodycts");
 
-  const calculateDiscount = () => {
-    if (actualPrice > offerPrice) {
-      const discount = ((actualPrice - offerPrice) / actualPrice) * 100;
-      return Math.round(discount);
-    }
-    return null;
+  // Default image if product image is not available
+  const imageUrl = product.image || "/assets/images/product-placeholder.jpg";
+
+  // Format price
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
-  const discount = calculateDiscount();
-  const isInWishlist = wishlistItems.some((item) => item.id === product.id);
+  // Function to add to cart (you can implement this based on your cart functionality)
+  const addToCartClick = (e) => {
+    e.stopPropagation(); // Prevent card click navigation
 
-  const handleWishlistToggle = (event: React.MouseEvent) => {
-    event.stopPropagation();
+    // Example: Dispatch add to cart action
     dispatch(
-      toggleItem({
-        id: product.id,
-        name: product.name,
-        colors: product.color,
-        img: image[0],
-        description: product.description,
-        amount: product.offerPrice,
+      addToCart({
+        productId: product.id,
+
+        quantity: 1,
       })
     );
-    toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
+
+    console.log("Added to cart:", product.name);
   };
 
   return (
-    <Card
-      onClick={() =>
-        window.open(
-          `/product-detail/${product.id}/${product.name.split(" ").join("-")}`,
-          "_blank"
-        )
-      }
-      className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:scale-[1.01] cursor-pointer"
-      style={{ boxShadow: "none", border: "none" }}
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-lg border border-gray-100"
+      onClick={navigateToProduct}
     >
-      <CardContent className="p-0">
-        <div className="aspect-square relative">
-          <Carousel className="w-full h-full">
-            <CarouselContent>
-              {image && image.length > 0 ? (
-                image.map((img, index) => (
-                  <CarouselItem key={index}>
-                    <div className="aspect-square relative">
-                      <img
-                        src={img}
-                        alt={`${name} - image ${index + 1}`}
-                        className="object-cover w-full h-full rounded-t-lg"
-                      />
-                    </div>
-                  </CarouselItem>
-                ))
-              ) : (
-                <CarouselItem>
-                  <div className="aspect-square relative bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400">No image available</span>
-                  </div>
-                </CarouselItem>
-              )}
-            </CarouselContent>
-            <CarouselPrevious className="hidden group-hover:flex" />
-            <CarouselNext className="hidden group-hover:flex" />
-          </Carousel>
-          {getRibbonText() && <Ribbon text={getRibbonText()} />}
-          <button
-            onClick={handleWishlistToggle}
-            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md transition-colors duration-200 hover:bg-gray-100 z-10"
-          >
-            <Heart
-              className={`w-5 h-5 ${
-                isInWishlist ? "text-red-500 fill-red-500" : "text-gray-400"
-              }`}
+      {/* Product Image */}
+      <div className="relative h-48 overflow-hidden bg-gray-100">
+        <Image
+          src={imageUrl}
+          alt={product.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-contain hover:scale-105 transition-transform duration-300"
+          priority={false}
+        />
+
+        {/* Discount Badge */}
+        {product.discount > 0 && (
+          <Badge className="absolute top-2 right-2 bg-red-500">
+            {product.discount}% OFF
+          </Badge>
+        )}
+
+        {/* Category Badge */}
+        <Badge className="absolute top-2 left-2 bg-green-600/90">
+          {product.category}
+        </Badge>
+      </div>
+
+      {/* Product Details */}
+      <div className="p-4 flex-grow flex flex-col">
+        <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">
+          {product.name}
+        </h3>
+
+        {/* Product Unit */}
+        <p className="text-sm text-gray-500 mb-2">{product.unit}</p>
+
+        {/* Rating */}
+        <div className="flex items-center mb-3">
+          <div className="flex items-center">
+            <Star
+              className="h-4 w-4 text-yellow-400 fill-yellow-400"
+              fill={product.rating > 0 ? "currentColor" : "none"}
             />
-          </button>
-          {discount && (
-            <span className="md:hidden absolute bottom-2 right-2 bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded z-10">
-              {discount}% OFF
+            <span className="ml-1 text-sm text-gray-600">
+              {product.rating > 0 ? product.rating.toFixed(1) : "No rating"}
             </span>
-          )}
+          </div>
+          <span className="mx-2 text-gray-300">|</span>
+          <span className="text-sm text-gray-500">
+            {product.numReviews > 0
+              ? `${product.numReviews} reviews`
+              : "No reviews"}
+          </span>
         </div>
-        <div className="p-2 md:p-4 bg-white">
-          <h3 className="font-semibold text-md mb-1 text-gray-800 line-clamp-1">
-            {name}
-          </h3>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <span className="text-lg font-bold text-gray-900">
-                ₹{offerPrice}
-              </span>
-              {actualPrice > offerPrice && (
-                <span className="text-sm line-through ml-2 text-gray-500">
-                  ₹{actualPrice}
-                </span>
-              )}
-            </div>
-            {discount && (
-              <span className="hidden md:block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">
-                {discount}% OFF
+
+        {/* Pricing */}
+        <div className="mt-auto">
+          <div className="flex items-center">
+            <span className="text-lg font-bold text-gray-900">
+              {formatPrice(product.price)}
+            </span>
+            {product.discount > 0 && (
+              <span className="ml-2 text-sm line-through text-gray-400">
+                {formatPrice(product.mrp)}
               </span>
             )}
           </div>
+
+          {/* Stock Status */}
+          <p
+            className={`text-xs mb-3 ${
+              product.stockQuantity > 0 ? "text-green-600" : "text-red-500"
+            }`}
+          >
+            {product.stockQuantity > 0 ? `In Stock` : "Out of Stock"}
+          </p>
+
+          {/* Add to Cart Button */}
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full "
+            onClick={addToCartClick}
+            disabled={product.stockQuantity <= 0}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Add to Cart
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

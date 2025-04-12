@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+
+import React, { useEffect, useState, useCallback } from "react";
+import { useDispatch } from "react-redux";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { getAllProducts } from "@/lib/features/products";
@@ -39,8 +40,10 @@ const ProductSkeleton = () => (
 );
 
 const Products = () => {
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [productsData, setProductsData] = useState({
     items: [],
     currentPage: 1,
@@ -48,89 +51,96 @@ const Products = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState({});
 
-  const callGetProducts = async (filters: any = {}, page = 1) => {
-    const queryParams = new URLSearchParams({
-      limit: "16",
-      page: page.toString(),
-      categoryId: searchParams.get("categoryId") || "",
-      search: searchParams.get("search") || "",
-      parentCategoryId: searchParams.get("parentCategoryId") || "",
-      latestProduct: searchParams.get("latestProduct") || "",
-      featureProduct: searchParams.get("featureProduct") || "",
-      bestsellerProduct: searchParams.get("bestsellerProduct") || "",
-      sort: filters?.sort || "",
-      percentageOff: filters?.discount?.value?.toString() || "",
-      material: JSON.stringify(filters.material || []),
-      colors: JSON.stringify(filters.color || []),
-      sizes: JSON.stringify(filters.size || []),
-      minPrice: filters?.price?.[0]?.toString() || "0",
-      maxPrice: filters?.price?.[1]?.toString() || "100000",
-    });
+  const fetchProducts = useCallback(
+    async (filters: any = {}, page = 1) => {
+      try {
+        setIsLoading(true);
 
-    try {
-      setIsLoading(true);
-
-      const { payload } = await dispatch(getAllProducts(queryParams));
-     
-
-      if (payload.success) {
-        const data = {
-          currentPage: payload.currentPage,
-          totalPages: payload.totalPages,
-          items: payload.products.map((item) => ({
-            id: item._id,
-            name: item.name,
-            rating: item.rating.star,
-            offerPrice: item.sizes[0].offerPrice,
-            actualPrice: item.actualPrice,
-            reviewCount: item.rating.ratedBy,
-            brand: "",
-            color: item.color,
-            colors: item.colors.map((color) => ({
-              name: color.name,
-              class: `bg-${color.name}`,
-              id: color._id,
-            })),
-            sizes: item.sizes.map((size) => ({
-              type: size.size,
-              stock: size.stock,
-              price: size.offerPrice,
-              id: size._id,
-            })),
-            sku: item.sku,
-            image: item.img,
-            best: item.bestsellerProduct,
-            featured: item.featureProduct,
-            latest: item.latestProduct,
-            stock: item.stock,
-          })),
+        // Base query parameters from URL
+        const baseParams: any = {
+          limit: "16",
+          page: page.toString(),
+          search: searchParams.get("search") || "",
+          category: searchParams.get("category") || "",
+          isFeatured: searchParams.get("isFeatured") || "",
+          sort: filters?.sort || searchParams.get("sort") || "",
         };
 
-        setProductsData(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Price filters
+        if (filters?.price) {
+          baseParams.minPrice = filters.price[0]?.toString() || "0";
+          baseParams.maxPrice = filters.price[1]?.toString() || "100000";
+        }
 
+        // Create URLSearchParams object
+        const queryParams = new URLSearchParams(baseParams);
+
+        // Fetch data from API
+        const response = await fetch(`/api/products?${queryParams}`);
+        const data = await response.json();
+
+        if (data.success) {
+          // Transform product data for the component
+          const transformedProducts = data.products.map((product) => ({
+            id: product._id,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            mrp: product.mrp,
+            discount:
+              product.discountPercentage ||
+              Math.round(((product.mrp - product.price) / product.mrp) * 100),
+            stockQuantity: product.stockQuantity,
+            category: product.category,
+            unit: product.unit,
+            image: product.img,
+            rating: product.rating?.avgRating || 0,
+            numReviews: product.rating?.numReviews || 0,
+            isFeatured: product.isFeatured,
+          }));
+
+          setProductsData({
+            items: transformedProducts,
+            currentPage: data.currentPage,
+            totalPages: data.totalPages,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [searchParams]
+  );
+
+  // Fetch products on initial load and when search params change
   useEffect(() => {
-    callGetProducts();
-  }, [searchParams]);
+    fetchProducts(currentFilters, 1);
+  }, [searchParams, fetchProducts]);
 
   const handleApplyFilters = (filters) => {
-    callGetProducts(filters);
+    setCurrentFilters(filters);
+    fetchProducts(filters, 1);
   };
 
   const handlePageChange = (page) => {
-    callGetProducts({}, page);
+    fetchProducts(currentFilters, page);
+
+    // Scroll to top of products when changing page
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
+
   const renderPaginationItems = () => {
     const { currentPage, totalPages } = productsData;
     const items = [];
 
+    // Logic for showing pagination items
     for (let i = 1; i <= totalPages; i++) {
       if (
         i === 1 ||
@@ -142,6 +152,11 @@ const Products = () => {
             <PaginationLink
               onClick={() => handlePageChange(i)}
               isActive={currentPage === i}
+              className={
+                currentPage === i
+                  ? "bg-black text-white hover:bg-gray-800"
+                  : "hover:bg-gray-100"
+              }
             >
               {i}
             </PaginationLink>
@@ -159,28 +174,58 @@ const Products = () => {
     return items;
   };
 
-  return (
-    <div className="bg-white py-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto relative">
-        <div className="mb-4  left-0 -top-20">
-          <Button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="bg-secondary-900 hover:bg-secondary-950"
-          >
-            <Filter className="md:mr-2 h-4 w-4" />
-            <span className="hidden md:block"> Filters </span>
-          </Button>
-        </div>
+  // Display a category indicator if we're filtering by category
+  const categoryName = searchParams.get("category");
+  const isFeatured = searchParams.get("isFeatured") === "true";
+  const searchTerm = searchParams.get("search");
 
-        <div className="flex">
+  return (
+    <div className="bg-white py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          {/* Page title and info */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {categoryName
+                ? `${categoryName}`
+                : isFeatured
+                ? "Featured Products"
+                : searchTerm
+                ? `Search Results: "${searchTerm}"`
+                : "All Products"}
+            </h1>
+
+            {productsData.items.length > 0 && !isLoading && (
+              <p className="text-gray-500">
+                {productsData.items.length} product
+                {productsData.items.length !== 1 ? "s" : ""} found
+              </p>
+            )}
+          </div>
+
+          {/* Filter button */}
+          <div className="mb-6 ">
+            <Button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="bg-black hover:bg-gray-800 text-white"
+            >
+              <Filter className="md:mr-2 h-4 w-4" />
+              <span className="hidden md:inline">Filters</span>
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row">
+          {/* Filter sidebar */}
           <FilterComponent
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
             onApplyFilters={handleApplyFilters}
           />
-          <div className="flex-1">
+
+          {/* Products grid */}
+          <div className="flex-1 md:pl-4">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {Array(12)
                   .fill(null)
                   .map((_, index) => (
@@ -189,40 +234,44 @@ const Products = () => {
               </div>
             ) : productsData.items.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6 md:gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                   {productsData.items.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
-                <Pagination className="mt-8">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          handlePageChange(productsData.currentPage - 1)
-                        }
-                        className={
-                          productsData.currentPage === 1
-                            ? "pointer-events-none opacity-50 "
-                            : ""
-                        }
-                      />
-                    </PaginationItem>
-                    {renderPaginationItems()}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          handlePageChange(productsData.currentPage + 1)
-                        }
-                        className={
-                          productsData.currentPage === productsData.totalPages
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+
+                {/* Pagination */}
+                {productsData.totalPages > 1 && (
+                  <Pagination className="mt-12">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            handlePageChange(productsData.currentPage - 1)
+                          }
+                          className={
+                            productsData.currentPage === 1
+                              ? "pointer-events-none opacity-50 cursor-not-allowed"
+                              : "hover:bg-gray-100"
+                          }
+                        />
+                      </PaginationItem>
+                      {renderPaginationItems()}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            handlePageChange(productsData.currentPage + 1)
+                          }
+                          className={
+                            productsData.currentPage === productsData.totalPages
+                              ? "pointer-events-none opacity-50 cursor-not-allowed"
+                              : "hover:bg-gray-100"
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[60vh]">

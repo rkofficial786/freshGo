@@ -1,427 +1,288 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, Trash2, ShoppingCart } from "lucide-react";
-import {
-  decreaseCount,
-  getCartItems,
-  getCouponById,
-  getVisibleCoupons,
-  increaseCount,
-  removeFromCart,
-  setTotalAmount,
-} from "@/lib/features/cart";
-import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
-import useWindowSize from "@/hooks/useWindowSize";
-import { useRouter } from "next/navigation";
 
-import AddressManagement from "./AddressManage";
-import CartSummary from "./CartSummary";
-import ButtonMain from "@/components/ButtonMain";
-import Loader from "@/components/Loader";
-import Skeleton from "react-loading-skeleton";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  getCartItems,
+  removeFromCart,
+  updateQuantity,
+} from "@/lib/features/cart";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const CartPage = () => {
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      street: "123 Main St",
-      city: "Anytown",
-      zip: "12345",
-    },
-  ]);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    name: "",
-    street: "",
-    city: "",
-    zip: "",
-  });
-
   const dispatch = useDispatch<any>();
-  const cartItems = useSelector((state: any) => state.cart.items);
-  const [cartProducts, setCartProducts] = useState([]);
-  const [visibleCoupons, setVisibleCoupons] = useState<any[]>([]);
-  const [appliedCoupons, setAppliedCoupons] = useState<any>([]);
-  const { currentOrder } = useSelector((state: any) => state.order);
-  const [discountAmount, setDiscountAmount] = useState(0);
-
-  const { totalAmount } = useSelector((state: any) => state.cart);
-  const latestTotalRef = useRef(0);
-  const { width } = useWindowSize();
-
-  const { token } = useSelector((state: any) => state.auth);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const [showCouponSelector, setShowCouponSelector] = useState(false);
+  const { items, products, summary, loading, error } = useSelector(
+    (state) => state.cart
+  );
+  const { token } = useSelector((state) => state.auth);
 
-  const handleCouponToggle = () => setShowCouponSelector(!showCouponSelector);
-
-  const callGetCartItems = async () => {
-    try {
-      setLoading(true);
-      const { payload } = await dispatch(
-        getCartItems({
-          carts: cartItems.map((item: any) => item.id),
-        })
-      );
-
-      if (payload.success) {
-        setCartProducts(
-          cartItems
-            .map((cartItem: any) => {
-              const product = payload.products.find(
-                (p: any) => p._id === cartItem.id
-              );
-
-              if (!product) {
-                console.error(
-                  `Product not found for cart item: ${cartItem.id}`
-                );
-                return null;
-              }
-
-              const matchedSize = product.sizes.find(
-                (size: any) => size._id === cartItem.size.id
-              );
-
-              return {
-                id: product._id,
-                name: product?.name,
-                images: product?.img,
-                color: product?.color,
-                actualPrice: product?.actualPrice,
-                size: matchedSize
-                  ? {
-                      id: matchedSize?._id,
-                      type: matchedSize?.size,
-                      stock: matchedSize?.stock,
-                      price: matchedSize?.offerPrice,
-                      comboPrice: matchedSize?.comboPrice,
-                      shippingPrice: matchedSize?.shippingPrice,
-                    }
-                  : null,
-                count: cartItem?.count || 1,
-              };
-            })
-            .filter(Boolean) // Remove any null entries
-        );
-        if (cartItems.length > 3) {
-          toast(
-            "Courier and transportation charges are extra. Please contact Shreya Collection for more information.",
-            {
-              position: "top-right",
-              duration: 7000,
-            }
-          );
-        }
-      } else {
-        toast.error(payload.msg);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    }
-  };
-
-  const callGetVisibleCoupons = async () => {
-    try {
-      const { payload }: any = await dispatch(getVisibleCoupons());
-
-      if (payload.success) {
-        setVisibleCoupons(payload.coupons);
-      } else {
-        toast.error(payload.msg);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const calculateProductTotal = (product: any, quantity: number) => {
-    const { price: offerPrice, comboPrice } = product.size;
-
-    // If comboPrice is 0, null, or undefined, use regular offer price for all items
-    if (!comboPrice) {
-      return quantity * offerPrice;
-    }
-
-    const completeSets = Math.floor(quantity / 4);
-    const remainingItems = quantity % 4;
-    const totalPrice = completeSets * comboPrice + remainingItems * offerPrice;
-
-    return totalPrice;
-  };
-
-  const calculateDeliveryFee = (cartItems, cartProducts) => {
-    // Calculate total quantity across all items
-    const totalQuantity =
-      cartItems?.reduce((sum, item) => sum + Number(item.count), 0) || 0;
-    console.log(totalQuantity, "total");
-    // Base price is 45 for the first item
-    // Each additional item adds 24
-    const shippingPrice =
-      totalQuantity === 0 ? 0 : 45 + 24 * (totalQuantity - 1);
-
-    return shippingPrice;
-  };
-
-  const { subtotal, tax, finalTotal, promotions, deliveryFee } = useMemo(() => {
-    const subtotal = cartItems?.reduce((sum, item) => {
-      const product = cartProducts.find(
-        (p) => p?.id === item?.id && p?.size?.id === item?.size?.id
-      );
-      return sum + (product?.actualPrice || 0) * item.count;
-    }, 0);
-
-    const offerPrice = cartItems?.reduce((sum, item) => {
-      const product = cartProducts?.find(
-        (p) => p.id === item?.id && p?.size?.id === item?.size?.id
-      );
-      if (!product) return sum;
-
-      return sum + calculateProductTotal(product, item.count);
-    }, 0);
-
-    const totalQuantity = cartItems?.reduce(
-      (sum, item) => sum + item?.count,
-      0
-    );
-
-    const promotions = subtotal - offerPrice;
-
-    const tax = 0;
-
-    const deliveryFee = calculateDeliveryFee(cartItems, cartProducts);
-
-    const finalTotal =
-      subtotal + deliveryFee + tax - discountAmount - promotions;
-    latestTotalRef.current = finalTotal;
-    dispatch(setTotalAmount(finalTotal));
-
-    return { subtotal, tax, finalTotal, promotions, deliveryFee };
-  }, [cartItems, cartProducts, discountAmount]);
-
-  const calculateDiscountAmount = (coupon, totalOfferPrice) => {
-    let discount = 0;
-    if (coupon.type === "percentage") {
-      const calculatedPercent = (totalOfferPrice * coupon.off) / 100;
-      discount = Math.min(calculatedPercent, coupon.amount);
-    } else if (coupon.type === "flat") {
-      discount = coupon.off;
-    }
-
-    return discount;
-  };
-
-  const handleApplyCoupon = async (code) => {
-    try {
-      const { payload }: any = await dispatch(
-        getCouponById({ code: code, amount: finalTotal })
-      );
-
-      if (payload.success && payload.coupon.isValid) {
-        const discountAmount = calculateDiscountAmount(
-          payload.coupon,
-          finalTotal
-        );
-        setAppliedCoupons([payload.coupon]);
-        setDiscountAmount(discountAmount);
-        toast.success("Coupon applied successfully!");
-      } else {
-        toast.error("Coupon is not valid for the current user");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to apply coupon.");
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupons([]);
-    setDiscountAmount(0);
-    toast.success("Coupon removed successfully!");
-  };
-
+  // Fetch product details whenever cart items change
   useEffect(() => {
-    if (token) {
-      callGetVisibleCoupons();
-      callGetCartItems();
+    if (items.length > 0) {
+      dispatch(getCartItems({ cartItems: items }));
+    }
+  }, [items, dispatch]);
+
+  const handleRemoveItem = (productId) => {
+    dispatch(removeFromCart(productId));
+  };
+
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    dispatch(updateQuantity({ productId, quantity: newQuantity }));
+  };
+
+  const handleCheckout = () => {
+    if (!token) {
+      router.push("/login?redirect=checkout");
     } else {
-      toast("Please Login to checkout");
-      router.push("/login");
+      router.push("/checkout");
     }
-  }, []);
-
-  useEffect(() => {
-    // Remove applied coupons when cart changes
-    setAppliedCoupons([]);
-    setDiscountAmount(0);
-
-    // Recheck coupon validity if there was a previously applied coupon
-    if (appliedCoupons.length > 0) {
-      handleApplyCoupon(appliedCoupons[0].couponCode);
-    }
-  }, [cartItems]);
-
-  const handleRemoveItem = (id, sizeId) => {
-    dispatch(removeFromCart({ id, sizeId }));
-
-    setCartProducts((prevProducts: any) =>
-      prevProducts.filter(
-        (product) => !(product.id === id && product.size.id === sizeId)
-      )
-    );
-  };
-  const handleQuantityChange = (id, sizeId, action) => {
-    const currentProduct: any = cartProducts.find(
-      (product: any) => product.id === id && product.size.id == sizeId
-    );
-    const currentItem = cartItems.find(
-      (item) => item.id === id && item.size.id == sizeId
-    );
-    if (action === "decrease") {
-      if (currentItem && currentItem.count === 1) {
-        handleRemoveItem(id, sizeId);
-        return;
-      }
-    } else if (action === "increase") {
-      // Check if increasing would exceed the stock
-      if (currentItem.count >= currentProduct.size.stock) {
-        toast.error(
-          `Sorry, only ${currentProduct.size.stock} item(s) available in stock.`
-        );
-        return;
-      }
-    }
-
-    dispatch(
-      action === "increase"
-        ? increaseCount({ id, sizeId })
-        : decreaseCount({ id, sizeId })
-    );
-
-    setCartProducts((prevProducts: any) =>
-      prevProducts.map((product) => {
-        if (product.id === id) {
-          const newQuantity =
-            action === "increase"
-              ? Math.min(product.quantity + 1, product.stock)
-              : Math.max(product.quantity - 1, 0);
-          return {
-            ...product,
-            quantity: newQuantity,
-          };
-        }
-        return product;
-      })
-    );
-  };
-  // ordres
-
-  const handleAddAddress = () => {
-    setAddresses([...addresses, { id: addresses.length + 1, ...newAddress }]);
-    setNewAddress({ name: "", street: "", city: "", zip: "" });
-    setShowAddressForm(false);
   };
 
   if (loading) {
     return (
-      <Loader>
-        {" "}
-        <div className="p-4 container mx-auto">
-          <div className="flex flex-col md:flex-row md:items-start">
-            {/* Skeleton for the product image */}
-            <div className="md:w-2/4 w-full">
-              <Skeleton height={800} width={"100%"} />
-            </div>
-
-            {/* Skeleton for product description */}
-            <div className="md:w-2/3 w-full md:pl-6 mt-6 md:mt-0">
-              {/* Skeleton for product title */}
-              <Skeleton height={300} width={"100%"} />
-
-              {/* Skeleton for product price */}
-              <Skeleton
-                height={500}
-                width={"100%"}
-                style={{ marginTop: "16px" }}
-              />
-
-              {/* Skeleton for product description */}
-            </div>
-          </div>
+      <div className="container mx-auto py-12 px-4">
+        <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
         </div>
-      </Loader>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <p>Error loading cart: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
+        <div className="flex flex-col items-center justify-center py-16">
+          <ShoppingCart size={64} className="text-gray-300 mb-6" />
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Your cart is empty
+          </h2>
+          <p className="text-gray-500 mb-8 text-center max-w-md">
+            Looks like you haven't added any products to your cart yet.
+          </p>
+          <Button
+            onClick={() => router.push("/products")}
+            className="bg-black hover:bg-gray-800 text-white"
+          >
+            Start Shopping
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="bg-primary-50">
-      <div className="container mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6 text-center">Your Cart</h1>
+    <div className="container mx-auto py-12 px-4">
+      <h1 className="text-2xl font-bold mb-2">Your Cart</h1>
+      <p className="text-gray-500 mb-8">
+        {summary.totalQuantity} items in your cart
+      </p>
 
-        {cartItems.length > 0 ? (
-          <div className="flex flex-col lg:flex-row gap-6 xl:mx-[140px]">
-            {/* Left side - Addresses */}
-            <div className="w-full lg:w-6/12 ">
-              <AddressManagement />
-            </div>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Cart Items */}
+        <div className="lg:w-2/3">
+          {/* Back to shopping link */}
+          <Link
+            href="/products"
+            className="inline-flex items-center text-gray-600 hover:text-black mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Continue Shopping
+          </Link>
 
-            {/* Right side - Cart items and Order Summary */}
-            <CartSummary
-              setCheckoutLoading={setCheckoutLoading}
-              cartProducts={cartProducts}
-              subtotal={subtotal}
-              tax={tax}
-              deliveryFee={deliveryFee}
-              checkoutLoading={checkoutLoading}
-              discountAmount={discountAmount}
-              finalTotal={finalTotal}
-              onQuantityChange={handleQuantityChange}
-              onRemoveItem={handleRemoveItem}
-              cartItems={cartItems}
-              onApplyCoupon={handleApplyCoupon}
-              visibleCoupons={visibleCoupons}
-              appliedCoupons={appliedCoupons}
-              handleApplyCoupon={handleApplyCoupon}
-              handleRemoveCoupon={handleRemoveCoupon}
-            />
+          {/* Cart items list */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            {products.map((product) => {
+              // Find corresponding cart item to get quantity
+              const cartItem = items.find(
+                (item) => item.productId === product._id
+              );
+              const quantity = cartItem ? cartItem.quantity : 0;
+
+              return (
+                <div
+                  key={product._id}
+                  className="p-4 border-b border-gray-100 last:border-b-0"
+                >
+                  <div className="flex items-center">
+                    {/* Product image */}
+                    <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden relative">
+                      {product.img ? (
+                        <Image
+                          src={product.img}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <ShoppingCart className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product details */}
+                    <div className="ml-4 flex-grow">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {product.name}
+                      </h3>
+
+                      {product.unit && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {product.unit}
+                        </p>
+                      )}
+
+                      <div className="mt-1 flex items-center">
+                        <span className="text-lg font-semibold">
+                          ₹{product.price}
+                        </span>
+                        {product.mrp && product.mrp > product.price && (
+                          <>
+                            <span className="ml-2 text-sm text-gray-500 line-through">
+                              ₹{product.mrp}
+                            </span>
+                            <span className="ml-2 text-sm text-green-600">
+                              {Math.round(
+                                ((product.mrp - product.price) / product.mrp) *
+                                  100
+                              )}
+                              % off
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quantity controls */}
+                    <div className="flex items-center ml-4">
+                      <div className="flex items-center border border-gray-300 rounded-md">
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(product._id, quantity - 1)
+                          }
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                          disabled={quantity <= 1}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="px-3 py-1">{quantity}</span>
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(product._id, quantity + 1)
+                          }
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {/* Remove button */}
+                      <button
+                        onClick={() => handleRemoveItem(product._id)}
+                        className="ml-4 text-gray-400 hover:text-red-500"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-[80vh] gap-6   px-4">
-            <div className="relative flex items-center justify-center">
-              <div
-                className=" bg-blue-200 rounded-full opacity-20 flex items-center justify-center animate-pulse"
-                style={{ width: "180px", height: "180px" }}
-              >
-                <ShoppingCart
-                  size={100}
-                  className="text-blue-600 relative z-10"
-                />
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:w-1/3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">
+                  Subtotal ({summary.totalQuantity} items)
+                </span>
+                <span>₹{summary.mrpTotal?.toFixed(2) || 0}</span>
               </div>
+
+              {summary.discount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Discount</span>
+                  <span className="text-green-600">
+                    -₹{summary.discount?.toFixed(2) || 0}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">Delivery Fee</span>
+                {summary.deliveryFee > 0 ? (
+                  <span>₹{summary.deliveryFee?.toFixed(2) || 0}</span>
+                ) : (
+                  <span className="text-green-600">Free</span>
+                )}
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tax (GST)</span>
+                <span>₹{summary.tax?.toFixed(2) || 0}</span>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Total</span>
+                <span>
+                  ₹
+                  {(
+                    (summary.cartTotal || 0) +
+                    (summary.deliveryFee || 0) +
+                    (summary.tax || 0)
+                  ).toFixed(2)}
+                </span>
+              </div>
+
+              {summary.deliveryFee > 0 && (
+                <div className="text-sm text-gray-500 mt-2">
+                  Add ₹{(499 - (summary.cartTotal || 0)).toFixed(2)} more to get
+                  free delivery
+                </div>
+              )}
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 text-center">
-              Your Cart is Empty
-            </h2>
-            <p className="text-gray-600 text-center max-w-md">
-              It looks like you have not added any items to your cart yet. Start
-              shopping to fill it with amazing products!
-            </p>
-            <ButtonMain onClick={() => router.push("/")} className=" w-fit">
-              Start Shopping
-            </ButtonMain>
+
+            <Button
+              onClick={handleCheckout}
+              className="w-full mt-6 bg-black hover:bg-gray-800 text-white py-3"
+            >
+              Proceed to Checkout
+            </Button>
+
+            <div className="mt-6 text-sm text-center text-gray-500">
+              <p>We accept all major credit cards and UPI payments</p>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

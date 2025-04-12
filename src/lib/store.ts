@@ -24,7 +24,7 @@ import orderSlice from "./features/order";
 import productSlice from "./features/products";
 // Define the persist config
 const persistConfig = {
-  key: "shreya-collection",
+  key: "freshGo",
   storage,
 
   whitelist: ["cart", "auth", "wishlist", "order","category"],

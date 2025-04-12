@@ -1,7 +1,7 @@
 import React from "react";
 import Banner from "./Banner";
 import Category from "./Category";
-import NewArrival from "./NewArrival";
+import Showcase from "./Showcase";
 import { Separator } from "@/components/ui/separator";
 import Featured from "./Featured";
 import InstagramPage from "./Insta";
@@ -10,12 +10,12 @@ const page = () => {
   return (
     <div className="overflow-x-hidden">
       <Banner />
-      <Category />
+      <Showcase />
+      
       <Separator />
-      <NewArrival />
       <Featured />
       <Separator />
-      <InstagramPage/>
+   
     </div>
   );
 };

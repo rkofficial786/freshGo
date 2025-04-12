@@ -1,30 +1,90 @@
-import React, { useCallback, useRef, useState } from "react";
-import { Search, ShoppingCart, User, Heart, X, Menu } from "lucide-react";
+"use client";
+
+import React, { useCallback, useRef, useState, useEffect } from "react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Heart,
+  X,
+  Menu,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import CategoryMenu from "./Category";
-import Sidebar from "./Sidebar";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { getSearchSuggestion } from "@/lib/features/misc";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 
+// List of main categories for the dropdown
+const mainCategories = [
+  "Fruits",
+  "Vegetables",
+  "Dairy",
+  "Bakery",
+  "Meat",
+  "Seafood",
+  "Snacks",
+  "Beverages",
+  "Frozen",
+  "Household",
+];
+
 const Navbar = () => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { token } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const cartItems = useSelector((state: any) => state.cart.items);
   const wishlistItems = useSelector((state: any) => state.wishlist.items);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<any>(null);
   const [loading, setIsLoading] = useState(false);
-  const dropdownRef = useRef<any>();
+  const dropdownRef = useRef<any>(null);
+  const categoryBtnRef = useRef<any>(null);
+  const categoryDropdownRef = useRef<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const dispatch = useDispatch<any>();
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  const navigateTo = (path) => {
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Handle clicks outside the category dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target) &&
+        categoryBtnRef.current &&
+        !categoryBtnRef.current.contains(event.target)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [categoryDropdownRef, categoryBtnRef]);
+
+  const navigateTo = (path: string) => {
     if ((path === "/profile" || path === "/cart") && !token) {
       router.push("/login");
     } else {
@@ -40,7 +100,7 @@ const Navbar = () => {
   };
 
   const fetchSearchSuggestions = useCallback(
-    async (value) => {
+    async (value: string) => {
       if (!value.trim()) {
         setSearchResults([]);
         return;
@@ -50,7 +110,7 @@ const Navbar = () => {
         setIsLoading(true);
         const { payload } = await dispatch(getSearchSuggestion(value));
         if (payload.success) {
-          setSearchResults(payload.suggestion);
+          setSearchResults(payload.suggestions);
         }
       } catch (error) {
         console.log(error);
@@ -65,150 +125,302 @@ const Navbar = () => {
     setIsSearchActive(false);
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     fetchSearchSuggestions(value);
   };
 
-  const handleCategoryClick = () => {
+  const handleCategoryClick = (category: string) => {
+    router.push(`/products?category=${category}`);
+    setIsCategoryDropdownOpen(false);
     setIsSheetOpen(false);
   };
 
+  const totalQuantity = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+
   return (
-    <nav className="bg-gray-50 text-gray-900 sticky top-0 z-[200] navbar-main">
-      <div className="container mx-auto p-2">
-        {isSearchActive ? (
-          <div className="mt-2 flex flex-col items-center relative">
-            <div className="w-full flex items-center">
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchTerm}
-                placeholder="Search..."
-                className="flex-grow bg-gray-200 text-gray-900 border-none rounded-l-md py-2 px-4 ring-[1px] ring-gray-300 focus:outline-none focus:ring-[1px] focus:ring-primary-500"
-                onChange={handleInputChange}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSearchActive(false)}
-                className="bg-primary-500 hover:bg-primary-600 rounded-r-md h-[42px] rounded-none"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
-            {loading && (
-              <div className="absolute top-full left-0 w-full bg-gray-300 rounded-b-md shadow-lg z-10 p-2">
-                <Skeleton className="h-6 w-full mb-2" />
-                <Skeleton className="h-6 w-full mb-2" />
-                <Skeleton className="h-6 w-full" />
-              </div>
-            )}
-            {!loading && searchResults.length > 0 && (
-              <div
-                ref={dropdownRef}
-                className="absolute top-full left-0 w-full bg-gray-50 rounded-b-md shadow-xl z-10"
-              >
-                {searchResults.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-2 hover:bg-gray-400 cursor-pointer"
-                    onClick={() => {
-                      setSearchTerm(item.name);
-                      router.push(`/products/?search=${item.name}`);
-                      setTimeout(() => {
-                        setIsSearchActive(false);
-                      }, 500);
-                    }}
-                  >
-                    {item.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-between items-center">
-            <div
-              onClick={() => router.push("/")}
-              className="md:flex-1 flex items-center"
-            >
-              <h3 className="text-xl md:text-3xl font-samarkan text-[#D9251C] cursor-pointer">
-                Shreya Collection
-              </h3>
-            </div>
-
-            <div
-              className="flex-1 flex md:justify-center justify-start"
-              onClick={() => navigateTo("/")}
-            >
-              <img
-                src="/assets/logo/logo.png"
-                alt=""
-                className="w-16 object-contain cursor-pointer"
-              />
-            </div>
-
-            <div className="flex-1 flex justify-end space-x-2 lg:space-x-4">
-              <Button variant="ghost" size="icon" onClick={handleSearchClick}>
-                <Search className="h-5 w-5 lg:h-6 lg:w-6 " />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className=" lg:inline-flex relative"
-                onClick={() => navigateTo("/wishlist")}
-              >
-                <Heart className="h-6 w-6" />
-                {wishlistItems.length > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-700 w-2 h-2 rounded-full flex justify-center items-center shadow-xl"></span>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className=" lg:inline-flex relative"
-                onClick={() => navigateTo("/cart")}
-              >
-                <ShoppingCart className="h-6 w-6" />
-                {cartItems.length > 0 && (
-                  <span className="absolute text-white -top-1 left-4 bg-red-700 w-6 h-6 rounded-full flex justify-center items-center shadow-xl">
-                    {cartItems.length}
-                  </span>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className=" lg:inline-flex"
-                onClick={() => navigateTo("/profile")}
-              >
-                <User className="h-6 w-6" />
-              </Button>
-
-              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent
-                  side="left"
-                  className="w-[300px] z-[200] sm:w-[400px]"
-                >
-                  <Sidebar onCategoryClick={handleCategoryClick} />
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-        )}
+    <nav
+      className={`sticky top-0 z-[200] w-full transition-all duration-300 ${
+        isScrolled ? "shadow-md" : ""
+      }`}
+    >
+      {/* Top announcement bar - now in black */}
+      <div className="bg-black text-white py-2 text-center text-sm">
+        <div className="container mx-auto">
+          Free shipping on orders over ₹499 | Same-day delivery available
+        </div>
       </div>
 
-      <div className="hidden lg:block bg-gray-100 border-t-[1px] border-gray-900">
-        <div className="container mx-auto py-2">
-          <CategoryMenu onCategoryClick={handleCategoryClick} />
+      {/* Main navbar */}
+      <div
+        className={`bg-white transition-all duration-300 ${
+          isScrolled ? "py-1" : "py-2"
+        }`}
+      >
+        <div className="container mx-auto px-4">
+          {isSearchActive ? (
+            <div className="flex flex-col items-center relative py-2">
+              <div className="w-full flex items-center">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={searchTerm}
+                  placeholder="Search for products..."
+                  className="flex-grow bg-gray-100 text-gray-900 border-none rounded-l-full py-3 px-6 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  onChange={handleInputChange}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSearchActive(false)}
+                  className="bg-black hover:bg-gray-800 text-white rounded-r-full h-[50px] rounded-l-none"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {loading && (
+                <div className="absolute top-full left-0 w-full bg-white rounded-b-lg shadow-lg z-10 p-4 mt-1">
+                  <Skeleton className="h-6 w-full mb-3" />
+                  <Skeleton className="h-6 w-full mb-3" />
+                  <Skeleton className="h-6 w-full" />
+                </div>
+              )}
+
+              {!loading && searchResults.length > 0 && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute top-full left-0 w-full bg-white rounded-b-lg shadow-lg z-10 mt-1 overflow-hidden"
+                >
+                  {searchResults.map((item, index) => (
+                    <div
+                      key={index}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center"
+                      onClick={() => {
+                        setSearchTerm(item.name);
+                        router.push(`/products/?search=${item.name}`);
+                        setTimeout(() => {
+                          setIsSearchActive(false);
+                        }, 500);
+                      }}
+                    >
+                      <Search className="h-4 w-4 text-gray-400 mr-3" />
+                      <span className="text-gray-800">{item.name}</span>
+                      <span className="ml-auto text-xs text-gray-500 capitalize">
+                        {item.type}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              {/* Logo & Brand */}
+              <div className="flex items-center space-x-2">
+                {/* Mobile menu button */}
+                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden text-gray-800"
+                    >
+                      <Menu className="h-6 w-6" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="left"
+                    className="w-[300px] z-[200] sm:w-[350px]"
+                  >
+                    <div className="pt-6 pb-8">
+                      <h3 className="text-2xl font-semibold text-black mb-6 pl-4">
+                        FreshGo
+                      </h3>
+
+                      <div className="space-y-6">
+                        <div className="px-4">
+                          <div className="text-sm font-semibold text-gray-500 mb-2">
+                            CATEGORIES
+                          </div>
+                          {mainCategories.map((category) => (
+                            <div
+                              key={category}
+                              className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                              onClick={() => handleCategoryClick(category)}
+                            >
+                              {category}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="border-t border-gray-200 pt-4 px-4">
+                          <div className="text-sm font-semibold text-gray-500 mb-2">
+                            ACCOUNT
+                          </div>
+                          <div
+                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                            onClick={() => {
+                              navigateTo("/profile");
+                              setIsSheetOpen(false);
+                            }}
+                          >
+                            My Profile
+                          </div>
+                          <div
+                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                            onClick={() => {
+                              navigateTo("/orders");
+                              setIsSheetOpen(false);
+                            }}
+                          >
+                            My Orders
+                          </div>
+                          <div
+                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                            onClick={() => {
+                              navigateTo("/wishlist");
+                              setIsSheetOpen(false);
+                            }}
+                          >
+                            My Wishlist
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                {/* Logo */}
+                <div
+                  onClick={() => router.push("/")}
+                  className="flex  items-center cursor-pointer"
+                >
+                  <div className="relative w-16 h-16 mr-2 overflow-hidden">
+                    <img
+                      src="/assets/images/logo.png"
+                      alt="logo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop category dropdown */}
+              <div className="hidden md:block relative">
+                <Button
+                  ref={categoryBtnRef}
+                  variant="ghost"
+                  className="text-gray-800 hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                  onClick={() =>
+                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                  }
+                >
+                  <span>Categories</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+
+                {isCategoryDropdownOpen && (
+                  <div
+                    ref={categoryDropdownRef}
+                    className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg z-20 w-48 py-2 overflow-hidden border border-gray-100"
+                  >
+                    {mainCategories.map((category) => (
+                      <div
+                        key={category}
+                        className="px-4 py-2 hover:bg-gray-100 text-gray-800 cursor-pointer transition-colors"
+                        onClick={() => handleCategoryClick(category)}
+                      >
+                        {category}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Search button (medium screens) */}
+              <Button
+                variant="ghost"
+                className="hidden md:flex items-center space-x-2 text-gray-700 border border-gray-200 px-4 py-2 rounded-full hover:bg-gray-100 flex-grow max-w-md mx-6"
+                onClick={handleSearchClick}
+              >
+                <Search className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-400 text-sm">
+                  Search for products...
+                </span>
+              </Button>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                {/* Search button (mobile only) */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden text-gray-800"
+                  onClick={handleSearchClick}
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+
+                {/* Wishlist */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-gray-800 hidden sm:flex"
+                  onClick={() => navigateTo("/wishlist")}
+                >
+                  <Heart className="h-5 w-5" />
+                  {wishlistItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                </Button>
+
+                {/* User account */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-800"
+                  onClick={() => navigateTo("/profile")}
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+
+                {/* Cart */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-gray-800"
+                  onClick={() => navigateTo("/cart")}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-0 -right-1 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                      {totalQuantity}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Mobile search button - always visible on small screens */}
+      <div className="md:hidden bg-gray-50 py-2 px-4 border-t border-gray-200">
+        <Button
+          variant="ghost"
+          className="w-full flex items-center justify-start space-x-2 text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full"
+          onClick={handleSearchClick}
+        >
+          <Search className="h-4 w-4 text-gray-400" />
+          <span className="text-gray-400 text-sm">Search for products...</span>
+        </Button>
       </div>
     </nav>
   );

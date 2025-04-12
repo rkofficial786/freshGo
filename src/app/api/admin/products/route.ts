@@ -29,15 +29,19 @@ export const POST = async (req: NextRequest) => {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const price = parseFloat(formData.get("price") as string);
+    const mrp = parseFloat(formData.get("mrp") as string);
     const stockQuantity = parseInt(formData.get("stockQuantity") as string);
+    const unit = formData.get("unit") as string;
+    const sku = formData.get("sku") as string;
     const category = formData.get("category") as string;
+    const isFeatured = formData.get("isFeatured") === "true";
     const hide = formData.get("hide") === "true";
 
-    if (!name || !price || !category) {
+    if (!name || !price || !category || !mrp || !unit) {
       return NextResponse.json(
         {
           success: false,
-          msg: "Name, price, and category are required fields.",
+          msg: "Name, price, MRP, unit, and category are required fields.",
         },
         { status: 400 }
       );
@@ -61,8 +65,12 @@ export const POST = async (req: NextRequest) => {
       img: imgUrl,
       description,
       price,
+      mrp,
       stockQuantity,
+      unit,
+      sku,
       category,
+      isFeatured,
       hide,
     });
 
@@ -76,6 +84,15 @@ export const POST = async (req: NextRequest) => {
     );
   } catch (error) {
     console.log("Error creating product:", error);
+    
+    // Check for duplicate key error (for SKU)
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { success: false, msg: "Product with this SKU already exists" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }

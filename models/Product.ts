@@ -33,10 +33,23 @@ const Product = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    mrp: {
+      type: Number,
+      required: true,
+    },
     stockQuantity: {
       type: Number,
       required: true,
       default: 0,
+    },
+    unit: {
+      type: String,
+      required: true,
+      default: "item" // default unit (could be kg, g, piece, packet, etc.)
+    },
+    sku: {
+      type: String,
+      unique: true,
     },
     description: {
       type: String,
@@ -45,6 +58,10 @@ const Product = new mongoose.Schema(
       type: String,
       required: true,
       enum: ['Fruits', 'Vegetables', 'Dairy', 'Bakery', 'Meat', 'Seafood', 'Snacks', 'Beverages', 'Frozen', 'Household', 'Other']
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false
     },
     rating: {
       avgRating: {

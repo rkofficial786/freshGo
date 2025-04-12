@@ -10,22 +10,25 @@ export const GET = async (req: NextRequest) => {
     const url = new URL(req.url);
     const search = url.searchParams.get("search");
     const category = url.searchParams.get("category");
-    const page = parseInt(url.searchParams.get("page") as string) || 1; // Default to page 1
-    const limit = parseInt(url.searchParams.get("limit") as string) || 10; // Default to 10 items per page
-    const sort = url.searchParams.get("sort"); // For sorting
+    const page = parseInt(url.searchParams.get("page") as string) || 1;
+    const limit = parseInt(url.searchParams.get("limit") as string) || 10;
+    const sort = url.searchParams.get("sort");
     const minPrice = parseFloat(url.searchParams.get("minPrice") as string);
     const maxPrice = parseFloat(url.searchParams.get("maxPrice") as string);
+    const isFeatured = url.searchParams.get("isFeatured") === 'true';
     const hide = url.searchParams.get("hide") === 'false';
+    const unit = url.searchParams.get("unit");
 
     // Build the search criteria
     const searchCriteria: any = {};
 
     if (search) {
-      const regex = new RegExp(search, "i"); // 'i' for case-insensitive
+      const regex = new RegExp(search, "i");
       searchCriteria.$or = [
         { name: regex },
         { description: regex },
-        { category: regex }
+        { category: regex },
+        { sku: regex }
       ];
     }
 
@@ -33,26 +36,42 @@ export const GET = async (req: NextRequest) => {
       searchCriteria.category = category;
     }
 
+    if (isFeatured) {
+      searchCriteria.isFeatured = true;
+    }
+
     if (hide) {
       searchCriteria.hide = !hide;
     }
 
-    if (!isNaN(minPrice)) {
-      searchCriteria.price = { ...searchCriteria.price, $gte: minPrice };
+    if (unit) {
+      searchCriteria.unit = unit;
     }
 
-    if (!isNaN(maxPrice)) {
-      searchCriteria.price = { ...searchCriteria.price, $lte: maxPrice };
+    // Price filter
+    if (!isNaN(minPrice) || !isNaN(maxPrice)) {
+      searchCriteria.price = {};
+      
+      if (!isNaN(minPrice)) {
+        searchCriteria.price.$gte = minPrice;
+      }
+      
+      if (!isNaN(maxPrice)) {
+        searchCriteria.price.$lte = maxPrice;
+      }
     }
 
     // Determine sorting
     let sortCriteria = {};
     if (sort === "newest") {
-      sortCriteria = { createdAt: -1 }; // Sort by newly arrived
+      sortCriteria = { createdAt: -1 };
     } else if (sort === "priceHighToLow") {
-      sortCriteria = { price: -1 }; // Sort by price high to low
+      sortCriteria = { price: -1 };
     } else if (sort === "priceLowToHigh") {
-      sortCriteria = { price: 1 }; // Sort by price low to high
+      sortCriteria = { price: 1 };
+    } else if (sort === "discountHighToLow") {
+      // Sort by discount percentage (calculated from MRP and price)
+      sortCriteria = { $expr: { $subtract: ["$mrp", "$price"] } };
     }
 
     // Calculate the skip value
@@ -64,6 +83,20 @@ export const GET = async (req: NextRequest) => {
       .skip(skip)
       .limit(limit);
 
+    // Calculate discount percentage for each product
+    const productsWithDiscount = products.map(product => {
+      const productObj = product.toObject();
+      if (productObj.mrp && productObj.price) {
+        const discount = productObj.mrp - productObj.price;
+        const discountPercentage = (discount / productObj.mrp) * 100;
+        return {
+          ...productObj,
+          discountPercentage: Math.round(discountPercentage)
+        };
+      }
+      return productObj;
+    });
+
     // Get the total count of products matching the search criteria
     const totalProducts = await Product.countDocuments(searchCriteria);
 
@@ -74,7 +107,7 @@ export const GET = async (req: NextRequest) => {
       {
         success: true,
         msg: "Success",
-        products,
+        products: productsWithDiscount,
         totalPages,
         previousPage: page == 1 ? null : page - 1,
         currentPage: page,

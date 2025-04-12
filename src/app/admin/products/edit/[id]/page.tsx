@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,21 +15,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
+import { useParams, useRouter } from "next/navigation";
 import { categories } from "@/constants/contsants";
 
-interface ProductFormData {
+interface ProductData {
+  _id: string;
   name: string;
   description: string;
-  price: string;
-  mrp: string;
-  stockQuantity: string;
+  price: number;
+  mrp: number;
+  stockQuantity: number;
   unit: string;
   sku: string;
   category: string;
   isFeatured: boolean;
   hide: boolean;
-  image: File | null;
-  imagePreview: string | null;
+  img: string;
 }
 
 interface FormErrors {
@@ -58,8 +59,16 @@ const unitOptions = [
   "can",
 ];
 
-const AddProduct = () => {
-  const [product, setProduct] = useState<ProductFormData>({
+const EditProduct = () => {
+  const params = useParams();
+  const router = useRouter();
+  const productId = params.id as string;
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  
+  const [product, setProduct] = useState({
     name: "",
     description: "",
     price: "",
@@ -70,12 +79,51 @@ const AddProduct = () => {
     category: "",
     isFeatured: false,
     hide: false,
-    image: null,
-    imagePreview: null,
+    image: null as File | null,
+    imagePreview: null as string | null,
+    keepExistingImage: true,
   });
+  
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`/api/products/${productId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const productData = data.product;
+          setProduct({
+            name: productData.name || "",
+            description: productData.description || "",
+            price: productData.price?.toString() || "",
+            mrp: productData.mrp?.toString() || "",
+            stockQuantity: productData.stockQuantity?.toString() || "",
+            unit: productData.unit || "",
+            sku: productData.sku || "",
+            category: productData.category || "",
+            isFeatured: productData.isFeatured || false,
+            hide: productData.hide || false,
+            image: null,
+            imagePreview: productData.img || null,
+            keepExistingImage: true,
+          });
+        } else {
+          toast.error("Failed to load product");
+        //   router.push("/admin/products");
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        toast.error("Error loading product");
+        router.push("/admin/products");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,18 +150,20 @@ const AddProduct = () => {
         ...product,
         image: file,
         imagePreview: URL.createObjectURL(file),
+        keepExistingImage: false,
       });
     }
   };
 
   const removeImage = () => {
-    if (product.imagePreview) {
+    if (product.imagePreview && !product.keepExistingImage) {
       URL.revokeObjectURL(product.imagePreview);
     }
     setProduct({
       ...product,
       image: null,
       imagePreview: null,
+      keepExistingImage: false,
     });
   };
 
@@ -155,50 +205,54 @@ const AddProduct = () => {
     formData.append("category", product.category);
     formData.append("isFeatured", String(product.isFeatured));
     formData.append("hide", String(product.hide));
+    formData.append("keepExistingImage", String(product.keepExistingImage));
 
     if (product.image) {
       formData.append("file", product.image);
     }
 
     try {
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
         body: formData,
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Product created successfully");
-        // Reset form
-        setProduct({
-          name: "",
-          description: "",
-          price: "",
-          mrp: "",
-          stockQuantity: "",
-          unit: "",
-          sku: "",
-          category: "",
-          isFeatured: false,
-          hide: false,
-          image: null,
-          imagePreview: null,
-        });
+        toast.success("Product updated successfully");
+        router.push("/admin/products");
       } else {
-        toast.error(data.msg || "Failed to create product");
+        toast.error(data.msg || "Failed to update product");
       }
     } catch (error) {
-      console.error("Error creating product:", error);
-      toast.error("Failed to create product. Please try again.");
+      console.error("Error updating product:", error);
+      toast.error("Failed to update product. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 flex justify-center items-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="h-8 w-8 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Loading product details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Edit Product</h1>
+        <Button variant="outline" onClick={() => router.push("/admin/products")}>
+          Back to Products
+        </Button>
+      </div>
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="col-span-2">
@@ -215,10 +269,10 @@ const AddProduct = () => {
                 type="button"
                 onClick={() => document.getElementById("image")?.click()}
               >
-                <FiUpload className="mr-2" /> Upload Image
+                <FiUpload className="mr-2" /> Upload New Image
               </Button>
               <span>
-                {product.image ? "1 file selected" : "No file selected"}
+                {product.image ? "1 file selected" : product.imagePreview ? "Using existing image" : "No image"}
               </span>
             </div>
             {product.imagePreview && (
@@ -400,12 +454,27 @@ const AddProduct = () => {
           </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Adding Product..." : "Add Product"}
-        </Button>
+        <div className="flex space-x-4">
+          <Button 
+            type="submit" 
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Updating Product..." : "Update Product"}
+          </Button>
+          
+          <Button 
+            type="button" 
+            variant="destructive"
+            onClick={() => router.push("/admin/products")}
+            className="w-32"
+          >
+            Cancel
+          </Button>
+        </div>
       </form>
     </div>
   );
 };
 
-export default AddProduct;
+export default EditProduct;

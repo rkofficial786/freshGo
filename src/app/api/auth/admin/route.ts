@@ -41,8 +41,7 @@ export const POST = async (req: NextRequest) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
       path: "/",
-      // Remove the domain restriction if testing locally
-      // domain: process.env.NODE_ENV === "production" ? ".shreyacollection.in" : undefined
+      
     };
 
     // Create and configure the response

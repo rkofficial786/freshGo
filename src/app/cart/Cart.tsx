@@ -184,7 +184,7 @@ const CartPage = () => {
                     </div>
 
                     {/* Quantity controls */}
-                    <div className="flex items-center ml-4">
+                    <div className=" items-center ml-4 hidden md:flex">
                       <div className="flex items-center border border-gray-300 rounded-md">
                         <button
                           onClick={() =>
@@ -216,6 +216,39 @@ const CartPage = () => {
                       </button>
                     </div>
                   </div>
+
+
+                  <div className="flex items-center mt-2 md:hidden">
+                      <div className="flex items-center border border-gray-300 rounded-md">
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(product._id, quantity - 1)
+                          }
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                          disabled={quantity <= 1}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="px-3 py-1">{quantity}</span>
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(product._id, quantity + 1)
+                          }
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {/* Remove button */}
+                      <button
+                        onClick={() => handleRemoveItem(product._id)}
+                        className="ml-4 text-gray-400 hover:text-red-500"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
                 </div>
               );
             })}

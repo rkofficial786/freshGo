@@ -413,17 +413,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile search button - always visible on small screens */}
-      <div className="md:hidden bg-gray-50 py-2 px-4 border-t border-gray-200">
-        <Button
-          variant="ghost"
-          className="w-full flex items-center justify-start space-x-2 text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full hover:border-green-300"
-          onClick={handleSearchClick}
-        >
-          <Search className="h-4 w-4 text-green-500" />
-          <span className="text-gray-400 text-sm">Search for products...</span>
-        </Button>
-      </div>
+      
     </nav>
   );
 };

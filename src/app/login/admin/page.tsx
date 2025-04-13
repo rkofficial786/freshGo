@@ -67,98 +67,6 @@ const OtpInput = ({ value, onChange }) => {
   );
 };
 
-const ForgotPasswordDialog = () => {
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [step, setStep] = useState(1);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleSendOtp = async () => {
-    try {
-      const response = await fetch("/api/auth/admin/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        toast.success("OTP sent successfully");
-        setStep(2);
-      } else {
-        toast.error(data.msg);
-      }
-    } catch (error) {
-      toast.error("Failed to send OTP");
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    try {
-      const response = await fetch("/api/auth/admin/forgot", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, newPassword }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Password reset successfully");
-        setIsOpen(false);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error("Failed to reset password");
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="link" className="px-0 font-normal">
-          Forgot password?
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Reset Password</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? "Enter your email to receive a reset code."
-              : "Enter the OTP and your new password."}
-          </DialogDescription>
-        </DialogHeader>
-        {step === 1 ? (
-          <div className="grid gap-4 py-4">
-            <Input
-              id="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-        ) : (
-          <div className="grid gap-4 py-4">
-            <OtpInput value={otp} onChange={setOtp} />
-            <Input
-              id="newPassword"
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-          </div>
-        )}
-        <DialogFooter>
-          <Button onClick={step === 1 ? handleSendOtp : handleVerifyOtp}>
-            {step === 1 ? "Send OTP" : "Reset Password"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [authData, setAuthData] = useState({ email: "", password: "" });
@@ -240,9 +148,6 @@ const AdminLogin = () => {
                 onChange={handleInputChange}
               />
             </div>
-          </div>
-          <div className="text-right">
-            <ForgotPasswordDialog />
           </div>
         </CardContent>
         <CardFooter>

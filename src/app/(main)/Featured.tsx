@@ -126,7 +126,7 @@ const Featured = () => {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">FEATURED PRODUCTS</h2>
+          <h2 className="md:text-3xl text-xl font-bold">FEATURED PRODUCTS</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, index) => (
@@ -145,7 +145,7 @@ const Featured = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">FEATURED PRODUCTS</h2>
+        <h2 className="md:text-3xl text-xl font-bold">FEATURED PRODUCTS</h2>
         <Button
           onClick={() => router.push(`/products?isFeatured=true`)}
           variant="link"

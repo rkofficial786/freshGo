@@ -4,21 +4,9 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { Button } from "@/components/ui/button";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
+import { categories } from "@/constants/contsants";
 
-// Categories
-export const categories = [
-  "Fruits",
-  "Vegetables",
-  "Dairy",
-  "Bakery",
-  "Meat",
-  "Seafood",
-  "Snacks",
-  "Beverages",
-  "Frozen",
-  "Household",
-  "Other",
-];
+
 
 // Define types for filter state and active sections
 interface Filters {
@@ -120,13 +108,13 @@ const FilterComponent: React.FC<{
       >
         <div className="p-6 flex-grow overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-neutral-900">Filters</h2>
+            <h2 className="text-2xl font-bold text-green-700">Filters</h2>
             <Button
               ref={crossRef}
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className=""
+              className="text-green-600 hover:text-green-800 hover:bg-green-50"
             >
               <X className="h-6 w-6" />
             </Button>
@@ -139,13 +127,13 @@ const FilterComponent: React.FC<{
                 onClick={() => handleSectionToggle("sort")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-neutral-800">
+                <span className="text-lg font-semibold text-green-800">
                   Sort By
                 </span>
                 {activeSections.sort ? (
-                  <ChevronUp className="h-5 w-5 text-neutral-600" />
+                  <ChevronUp className="h-5 w-5 text-green-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-neutral-600" />
+                  <ChevronDown className="h-5 w-5 text-green-600" />
                 )}
               </button>
               {activeSections.sort && (
@@ -156,8 +144,8 @@ const FilterComponent: React.FC<{
                       onClick={() => handleSortChange(option.value)}
                       className={`w-full text-left py-2 px-3 rounded-md ${
                         filters.sort === option.value
-                          ? "bg-neutral-200 text-neutral-900"
-                          : "hover:bg-neutral-100"
+                          ? "bg-green-100 text-green-800"
+                          : "hover:bg-green-50 text-gray-700"
                       }`}
                     >
                       {option.label}
@@ -173,13 +161,13 @@ const FilterComponent: React.FC<{
                 onClick={() => handleSectionToggle("category")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-neutral-800">
+                <span className="text-lg font-semibold text-green-800">
                   Category
                 </span>
                 {activeSections.category ? (
-                  <ChevronUp className="h-5 w-5 text-neutral-600" />
+                  <ChevronUp className="h-5 w-5 text-green-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-neutral-600" />
+                  <ChevronDown className="h-5 w-5 text-green-600" />
                 )}
               </button>
               {activeSections.category && (
@@ -192,11 +180,11 @@ const FilterComponent: React.FC<{
                         name="category"
                         checked={filters.category === category}
                         onChange={() => handleCategoryChange(category)}
-                        className="text-neutral-900 focus:ring-neutral-900"
+                        className="text-green-600 focus:ring-green-600"
                       />
                       <label
                         htmlFor={`category-${category}`}
-                        className="text-sm text-neutral-700"
+                        className="text-sm text-gray-700"
                       >
                         {category}
                       </label>
@@ -212,13 +200,13 @@ const FilterComponent: React.FC<{
                 onClick={() => handleSectionToggle("price")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-neutral-800">
+                <span className="text-lg font-semibold text-green-800">
                   Price Range
                 </span>
                 {activeSections.price ? (
-                  <ChevronUp className="h-5 w-5 text-neutral-600" />
+                  <ChevronUp className="h-5 w-5 text-green-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-neutral-600" />
+                  <ChevronDown className="h-5 w-5 text-green-600" />
                 )}
               </button>
               {activeSections.price && (
@@ -230,13 +218,14 @@ const FilterComponent: React.FC<{
                     step={100}
                     value={filters.price}
                     onChange={handlePriceChange as any}
-                    trackStyle={{ backgroundColor: "#000" }}
+                    trackStyle={{ backgroundColor: "#16a34a" }}
                     handleStyle={[
-                      { borderColor: "#000", backgroundColor: "#000" },
-                      { borderColor: "#000", backgroundColor: "#000" },
+                      { borderColor: "#16a34a", backgroundColor: "#16a34a" },
+                      { borderColor: "#16a34a", backgroundColor: "#16a34a" },
                     ]}
+                    railStyle={{ backgroundColor: "#dcfce7" }}
                   />
-                  <div className="flex justify-between text-sm text-neutral-600 mt-2">
+                  <div className="flex justify-between text-sm text-green-700 mt-2">
                     <span>₹{filters.price[0]}</span>
                     <span>₹{filters.price[1]}</span>
                   </div>
@@ -250,13 +239,13 @@ const FilterComponent: React.FC<{
         <div className="p-6 border-t border-neutral-200 bg-white">
           <div className="space-y-4">
             <Button
-              className="w-full bg-black text-white hover:bg-neutral-800"
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
               onClick={handleApply}
             >
               Apply Filters
             </Button>
             <Button
-              className="w-full bg-neutral-200 hover:bg-neutral-300 text-neutral-900"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300"
               onClick={handleClearFilters}
             >
               Clear All Filters

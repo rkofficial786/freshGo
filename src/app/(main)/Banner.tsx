@@ -129,7 +129,7 @@ const EcommerceParallaxHero = () => {
             ))}
           </div>
         </div>
-        <div className="absolute bottom-12 left-0 right-0 mx-auto flex flex-col items-center justify-center animate-fade-in-up-delay w-[180px] text-center transform translate-z-[10px] z-10">
+        <div className="absolute bottom-2 md:bottom-12 left-0 right-0 mx-auto flex flex-col items-center justify-center animate-fade-in-up-delay w-[180px] text-center transform translate-z-[10px] z-10">
           <div className="w-[30px] h-[50px] border-2 border-white rounded-[25px] relative mx-auto mb-[10px] inline-block shadow-glow">
             <div className="w-[4px] h-[10px] bg-white absolute top-[10px] left-1/2 -translate-x-1/2 rounded-[2px] animate-scroll-wheel"></div>
           </div>

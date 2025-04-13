@@ -209,7 +209,7 @@ const Products = () => {
           <div className="mb-6 ">
             <Button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="bg-black hover:bg-gray-800 text-white"
+              className="bg-green-700 hover:bg-green-500 text-white"
             >
               <Filter className="md:mr-2 h-4 w-4" />
               <span className="hidden md:inline">Filters</span>

@@ -19,11 +19,9 @@ const ProductCard = ({ product }) => {
       `/product-detail/${product.id}/${product.name.split(" ").join("-")}`
     );
   };
-
-  // Default image if product image is not available
+  
   const imageUrl = product.image || "/assets/images/placeholder.jpg";
 
-  // Format price
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -31,10 +29,9 @@ const ProductCard = ({ product }) => {
       maximumFractionDigits: 0,
     }).format(price);
   };
-  // Function to add to cart
+  
   const addToCartClick = (e) => {
-    e.stopPropagation(); // Prevent card click navigation
-
+    e.stopPropagation(); 
     dispatch(
       addToCart({
         productId: product.id,
@@ -50,24 +47,25 @@ const ProductCard = ({ product }) => {
       className="bg-white rounded-md overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl border border-gray-200 group cursor-pointer"
       onClick={navigateToProduct}
     >
-      <div className="relative h-48 overflow-hidden bg-gray-50">
+      {/* Adjusted height for better mobile display - reduced fixed height and using aspect ratio */}
+      <div className="relative w-full aspect-square sm:h-40 overflow-hidden bg-gray-50">
         <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-110">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-contain"
+            className="object-cover p-2"
             priority={false}
           />
         </div>
 
-        <Badge className="absolute top-2 left-2 bg-green-600 text-white transition-all duration-300 group-hover:bg-green-700 z-10">
+        <Badge className="absolute top-2 left-2 bg-green-600 text-white transition-all duration-300 group-hover:bg-green-700 z-10 text-xs">
           {product.category}
         </Badge>
 
         {product.discount > 0 && (
-          <Badge className="absolute top-2 right-2 bg-white text-green-600 border border-green-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-600 group-hover:text-white z-10">
+          <Badge className="absolute top-2 right-2 bg-white text-green-600 border border-green-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-600 group-hover:text-white z-10 text-xs">
             {product.discount}% OFF
           </Badge>
         )}
@@ -77,39 +75,39 @@ const ProductCard = ({ product }) => {
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full w-10 h-10 p-0 bg-white border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+              className="rounded-full w-8 h-8 sm:w-10 sm:h-10 p-0 bg-white border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToProduct();
               }}
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="p-4 flex-grow flex flex-col">
-        <h3 className="font-medium text-gray-900 mb-1 line-clamp-1 group-hover:text-green-700 transition-colors duration-300">
+      <div className="p-3 flex-grow flex flex-col">
+        <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1 line-clamp-1 group-hover:text-green-700 transition-colors duration-300">
           {product.name}
         </h3>
 
-        <p className="text-sm text-gray-500 mb-2">{product.unit}</p>
+        <p className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2">{product.unit}</p>
 
         <div className="mt-auto">
-          <div className="flex items-center mb-2">
-            <span className="text-lg font-bold text-green-700 transition-all duration-300 group-hover:text-green-600">
+          <div className="flex items-center mb-1 sm:mb-2">
+            <span className="text-base sm:text-lg font-bold text-green-700 transition-all duration-300 group-hover:text-green-600">
               {formatPrice(product.price)}
             </span>
             {product.discount > 0 && (
-              <span className="ml-2 text-sm line-through text-gray-400">
+              <span className="ml-2 text-xs sm:text-sm line-through text-gray-400">
                 {formatPrice(product.mrp)}
               </span>
             )}
           </div>
 
           <p
-            className={`text-xs mb-3 ${
+            className={`text-xs mb-2 sm:mb-3 ${
               product.stockQuantity > 0
                 ? "text-green-700 font-medium group-hover:text-green-600"
                 : "text-red-600"
@@ -123,11 +121,11 @@ const ProductCard = ({ product }) => {
           <Button
             variant="default"
             size="sm"
-            className="w-full bg-green-600 hover:bg-green-700 text-white transition-all duration-300 group-hover:shadow-md"
+            className="w-full bg-green-600 hover:bg-green-700 text-white transition-all duration-300 group-hover:shadow-md text-xs sm:text-sm py-1 sm:py-2"
             onClick={addToCartClick}
             disabled={product.stockQuantity <= 0}
           >
-            <ShoppingCart className="h-4 w-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
+            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 transition-transform duration-300 group-hover:scale-110" />
             <span className="transition-all duration-300 group-hover:tracking-wide">
               Add to Cart
             </span>

@@ -150,7 +150,7 @@ const AllProducts = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">ALL PRODUCTS</h2>
+        <h2 className="md:text-3xl text-xl font-bold">ALL PRODUCTS</h2>
         <Button
           onClick={() => router.push(`/products`)}
           variant="link"

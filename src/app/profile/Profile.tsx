@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   User,
@@ -10,7 +10,6 @@ import {
   LogOut,
   Menu,
   ChevronRight,
-  Settings,
   CircleUser,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -32,7 +31,7 @@ const Profile = () => {
   const router = useRouter();
   
   const [userDetails, setUserDetails] = useState({});
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState([]);
   const [defaultAddress, setDefaultAddress] = useState("");
   const [personalInfo, setPersonalInfo] = useState({
     name: "",
@@ -141,18 +140,18 @@ const Profile = () => {
         </button>
       </div>
 
-      <div className="container mx-auto p-4 md:p-6 space-y-6 relative">
+      <div className="container mx-auto p-4 md:p-6 relative">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar / Navigation */}
           <aside
             ref={sidebarRef}
             className={`
-              md:w-1/4 lg:w-1/5 bg-white rounded-lg shadow-sm border border-gray-200
+              md:w-1/4 lg:w-1/5 
+              bg-white rounded-lg shadow-sm border border-gray-200
+              md:sticky md:top-[120px] md:h-[calc(100vh-3rem)]
               transition-all duration-300 ease-in-out
-              fixed md:sticky top-0 right-0 h-screen md:h-auto z-50 md:z-auto
-              ${isSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
-              w-3/4 sm:w-1/2
-              p-5
+              ${isSidebarOpen ? "fixed inset-y-0 right-0 z-50 w-3/4 sm:w-1/2 translate-x-0" : "fixed inset-y-0 right-0 z-50 w-3/4 sm:w-1/2 translate-x-full md:translate-x-0 md:static md:z-0"}
+              p-5 overflow-y-auto
             `}
           >
             {/* User Profile Summary */}
@@ -237,44 +236,6 @@ const Profile = () => {
                   )}
                   {activeTab === "orders" && (
                     <Orders />
-                  )}
-                  {activeTab === "settings" && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Account Settings</h3>
-                      <p className="text-gray-500">Manage your account preferences and security options.</p>
-                      
-                      <div className="space-y-3">
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium">Password & Security</h4>
-                              <p className="text-sm text-gray-500">Manage password and security questions</p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                          </div>
-                        </div>
-                        
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium">Notification Preferences</h4>
-                              <p className="text-sm text-gray-500">Manage how you receive notifications</p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                          </div>
-                        </div>
-                        
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium">Privacy Settings</h4>
-                              <p className="text-sm text-gray-500">Control your data and privacy options</p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   )}
                 </div>
               </CardContent>

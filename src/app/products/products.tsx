@@ -40,7 +40,7 @@ const ProductSkeleton = () => (
 );
 
 const Products = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -76,15 +76,11 @@ const Products = () => {
           baseParams.maxPrice = filters.price[1]?.toString() || "100000";
         }
 
-        // Create URLSearchParams object
         const queryParams = new URLSearchParams(baseParams);
-
-        // Fetch data from API
-        const response = await fetch(`/api/products?${queryParams}`);
-        const data = await response.json();
+        const { payload } = await dispatch(getAllProducts(queryParams));
+        const data = payload;
 
         if (data.success) {
-          // Transform product data for the component
           const transformedProducts = data.products.map((product) => ({
             id: product._id,
             name: product.name,
@@ -118,7 +114,6 @@ const Products = () => {
     [searchParams]
   );
 
-  // Fetch products on initial load and when search params change
   useEffect(() => {
     fetchProducts(currentFilters, 1);
   }, [searchParams, fetchProducts]);
@@ -185,7 +180,6 @@ const Products = () => {
     <div className="bg-white py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
-          {/* Page title and info */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {categoryName
@@ -205,7 +199,6 @@ const Products = () => {
             )}
           </div>
 
-          {/* Filter button */}
           <div className="mb-6 ">
             <Button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -217,14 +210,12 @@ const Products = () => {
           </div>
         </div>
         <div className="flex flex-col md:flex-row">
-          {/* Filter sidebar */}
           <FilterComponent
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
             onApplyFilters={handleApplyFilters}
           />
 
-          {/* Products grid */}
           <div className="flex-1 md:pl-4">
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -242,7 +233,6 @@ const Products = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
                 {productsData.totalPages > 1 && (
                   <Pagination className="mt-12">
                     <PaginationContent>

@@ -3,10 +3,12 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "target": "ES2015",
     "allowJs": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "strict": false,
     "noEmit": true,
+
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,

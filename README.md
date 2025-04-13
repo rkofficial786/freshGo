@@ -6,7 +6,7 @@ FreshGo is a full-featured e-commerce platform for a grocery store, offering fre
 
 admin route : https://fresh-go-zeta.vercel.app/admin
 
-admin email : super@gmail.com
+admin email : super@gmail.com ,
 admin pass : 12345678
 
 

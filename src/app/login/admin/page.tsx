@@ -182,7 +182,7 @@ const AdminLogin = () => {
       console.log(payload, "payload");
 
       if (payload && payload.success) {
-        router.push("/admin/dashboard");
+        router.push("/admin/get-orders");
       } else {
         toast.error(payload.msg);
       }

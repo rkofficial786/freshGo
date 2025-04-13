@@ -112,7 +112,7 @@ const ProductPage = ({ params }) => {
         <p className="text-lg text-gray-600">Product not found</p>
         <Button
           onClick={() => router.push("/products")}
-          className="mt-4 bg-black hover:bg-gray-800 text-white"
+          className="mt-4 bg-green-600 hover:bg-green-700 text-white"
         >
           Back to Products
         </Button>
@@ -125,7 +125,7 @@ const ProductPage = ({ params }) => {
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="flex items-center text-gray-600 hover:text-black mb-6"
+        className="flex items-center text-gray-600 hover:text-green-600 mb-6 transition-colors"
       >
         <ChevronLeft className="h-5 w-5 mr-1" />
         Back to Products
@@ -133,7 +133,7 @@ const ProductPage = ({ params }) => {
 
       <div className="flex flex-col md:flex-row md:gap-8">
         {/* Product Image */}
-        <div className="md:w-1/2 bg-white rounded-lg overflow-hidden flex items-start justify-start">
+        <div className="md:w-1/2 bg-white rounded-lg overflow-hidden flex items-start justify-start border border-gray-200">
           <div className="relative w-full pt-[100%]">
             {product.img ? (
               <Image
@@ -154,7 +154,7 @@ const ProductPage = ({ params }) => {
         <div className="md:w-1/2 mt-6 md:mt-0">
           {/* Category */}
           <div className="mb-2">
-            <Badge variant="outline" className="text-gray-500">
+            <Badge variant="outline" className="text-green-600 border-green-600">
               {product.category}
             </Badge>
           </div>
@@ -171,7 +171,7 @@ const ProductPage = ({ params }) => {
           {product.rating && (
             <div className="flex items-center mt-2">
               <div className="flex items-center">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-green-500 text-green-500" />
                 <span className="ml-1 text-sm font-medium">
                   {product.rating.avgRating || "New"}
                 </span>
@@ -185,7 +185,7 @@ const ProductPage = ({ params }) => {
 
           {/* Price */}
           <div className="mt-4 flex items-center">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-green-700">
               ₹{product.price}
             </span>
             {product.mrp > product.price && (
@@ -220,7 +220,7 @@ const ProductPage = ({ params }) => {
 
           {/* Description */}
           <div className="mt-6">
-            <h3 className="text-lg font-medium mb-2">Description</h3>
+            <h3 className="text-lg font-medium mb-2 text-green-800">Description</h3>
             <p className="text-gray-600">{product.description}</p>
           </div>
 
@@ -228,11 +228,11 @@ const ProductPage = ({ params }) => {
 
           {/* Quantity Selector */}
           <div className="mt-6">
-            <h3 className="text-sm font-medium mb-2">Quantity</h3>
+            <h3 className="text-sm font-medium mb-2 text-green-800">Quantity</h3>
             <div className="flex items-center">
               <button
                 onClick={() => handleQuantityChange(quantity - 1)}
-                className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100"
+                className="p-2 border border-gray-300 rounded-l-md hover:bg-green-50 hover:border-green-300 transition-colors"
                 disabled={quantity <= 1}
               >
                 <Minus className="h-4 w-4" />
@@ -242,7 +242,7 @@ const ProductPage = ({ params }) => {
               </span>
               <button
                 onClick={() => handleQuantityChange(quantity + 1)}
-                className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"
+                className="p-2 border border-gray-300 rounded-r-md hover:bg-green-50 hover:border-green-300 transition-colors"
                 disabled={product.stockQuantity <= quantity}
               >
                 <Plus className="h-4 w-4" />
@@ -256,7 +256,7 @@ const ProductPage = ({ params }) => {
             <Button
               onClick={handleAddToCart}
               disabled={product.stockQuantity === 0}
-              className="w-full py-6 text-white bg-black hover:bg-gray-800 flex items-center justify-center gap-2"
+              className="w-full py-6 text-white bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 transition-colors"
             >
               <ShoppingCart className="h-5 w-5" />
               {isInCart ? "Added to Cart" : "Add to Cart"}
@@ -266,21 +266,21 @@ const ProductPage = ({ params }) => {
           {/* Benefits */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-start">
-              <Truck className="h-5 w-5 text-gray-600 mt-0.5" />
+              <Truck className="h-5 w-5 text-green-600 mt-0.5" />
               <div className="ml-3">
                 <h4 className="text-sm font-medium">Free Delivery</h4>
                 <p className="text-xs text-gray-500">On orders over ₹499</p>
               </div>
             </div>
             <div className="flex items-start">
-              <ShieldCheck className="h-5 w-5 text-gray-600 mt-0.5" />
+              <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5" />
               <div className="ml-3">
                 <h4 className="text-sm font-medium">Quality Guarantee</h4>
                 <p className="text-xs text-gray-500">Freshness you can trust</p>
               </div>
             </div>
             <div className="flex items-start">
-              <RefreshCw className="h-5 w-5 text-gray-600 mt-0.5" />
+              <RefreshCw className="h-5 w-5 text-green-600 mt-0.5" />
               <div className="ml-3">
                 <h4 className="text-sm font-medium">Easy Returns</h4>
                 <p className="text-xs text-gray-500">No questions asked</p>

@@ -4,21 +4,20 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { Button } from "@/components/ui/button";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
-import ButtonMain from "@/components/ButtonMain";
 
 // Categories
 export const categories = [
-  'Fruits', 
-  'Vegetables', 
-  'Dairy', 
-  'Bakery', 
-  'Meat', 
-  'Seafood', 
-  'Snacks', 
-  'Beverages', 
-  'Frozen', 
-  'Household', 
-  'Other'
+  "Fruits",
+  "Vegetables",
+  "Dairy",
+  "Bakery",
+  "Meat",
+  "Seafood",
+  "Snacks",
+  "Beverages",
+  "Frozen",
+  "Household",
+  "Other",
 ];
 
 // Define types for filter state and active sections
@@ -62,18 +61,21 @@ const FilterComponent: React.FC<{
 
   const handleSectionToggle = (section: keyof ActiveSections) => {
     setActiveSections((prev) => {
-      const newState = Object.keys(prev).reduce((acc, key) => ({
-        ...acc, 
-        [key]: key === section ? !prev[key as keyof ActiveSections] : false
-      }), {} as ActiveSections);
+      const newState = Object.keys(prev).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: key === section ? !prev[key as keyof ActiveSections] : false,
+        }),
+        {} as ActiveSections
+      );
       return newState;
     });
   };
 
   const handleCategoryChange = (category: string) => {
-    setFilters((prev) => ({ 
-      ...prev, 
-      category: prev.category === category ? "" : category 
+    setFilters((prev) => ({
+      ...prev,
+      category: prev.category === category ? "" : category,
     }));
   };
 
@@ -247,12 +249,12 @@ const FilterComponent: React.FC<{
         {/* Fixed Bottom Buttons */}
         <div className="p-6 border-t border-neutral-200 bg-white">
           <div className="space-y-4">
-            <ButtonMain 
-              className="w-full bg-black text-white hover:bg-neutral-800" 
+            <Button
+              className="w-full bg-black text-white hover:bg-neutral-800"
               onClick={handleApply}
             >
               Apply Filters
-            </ButtonMain>
+            </Button>
             <Button
               className="w-full bg-neutral-200 hover:bg-neutral-300 text-neutral-900"
               onClick={handleClearFilters}

@@ -41,7 +41,6 @@ const Navbar = () => {
   const { token } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const cartItems = useSelector((state: any) => state.cart.items);
-  const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const inputRef = useRef<any>(null);
   const [loading, setIsLoading] = useState(false);
   const dropdownRef = useRef<any>(null);
@@ -163,8 +162,8 @@ const Navbar = () => {
         isScrolled ? "shadow-md" : ""
       }`}
     >
-      {/* Top announcement bar - now in black */}
-      <div className="bg-black text-white py-2 text-center text-sm">
+      {/* Top announcement bar - now in green */}
+      <div className="bg-green-600 text-white py-2 text-center text-sm">
         <div className="container mx-auto">
           Free shipping on orders over ₹499 | Same-day delivery available
         </div>
@@ -185,7 +184,7 @@ const Navbar = () => {
                   type="text"
                   value={searchTerm}
                   placeholder="Search for products..."
-                  className="flex-grow bg-gray-100 text-gray-900 border-none rounded-l-full py-3 px-6 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  className="flex-grow bg-gray-100 text-gray-900 border-none rounded-l-full py-3 px-6 focus:outline-none focus:ring-2 focus:ring-green-400"
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                 />
@@ -199,7 +198,7 @@ const Navbar = () => {
                       setIsSearchActive(false);
                     }
                   }}
-                  className="bg-black hover:bg-gray-800 text-white rounded-r-full h-[50px] rounded-l-none"
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-r-full h-[50px] rounded-l-none"
                 >
                   {searchTerm.trim() ? (
                     <Search className="h-5 w-5" />
@@ -225,7 +224,7 @@ const Navbar = () => {
                   {searchResults.map((item, index) => (
                     <div
                       key={index}
-                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center"
+                      className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 flex items-center"
                       onClick={() => {
                         setSearchTerm(item.name);
                         router.push(`/products?search=${encodeURIComponent(item.name)}`);
@@ -234,7 +233,7 @@ const Navbar = () => {
                         }, 500);
                       }}
                     >
-                      <Search className="h-4 w-4 text-gray-400 mr-3" />
+                      <Search className="h-4 w-4 text-green-600 mr-3" />
                       <span className="text-gray-800">{item.name}</span>
                       <span className="ml-auto text-xs text-gray-500 capitalize">
                         {item.type}
@@ -264,7 +263,7 @@ const Navbar = () => {
                     className="w-[300px] z-[200] sm:w-[350px]"
                   >
                     <div className="pt-6 pb-8">
-                      <h3 className="text-2xl font-semibold text-black mb-6 pl-4">
+                      <h3 className="text-2xl font-semibold text-green-600 mb-6 pl-4">
                         FreshGo
                       </h3>
 
@@ -276,7 +275,7 @@ const Navbar = () => {
                           {mainCategories.map((category) => (
                             <div
                               key={category}
-                              className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                              className="py-2 px-2 hover:bg-green-50 rounded-md cursor-pointer"
                               onClick={() => handleCategoryClick(category)}
                             >
                               {category}
@@ -289,7 +288,7 @@ const Navbar = () => {
                             ACCOUNT
                           </div>
                           <div
-                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                            className="py-2 px-2 hover:bg-green-50 rounded-md cursor-pointer"
                             onClick={() => {
                               navigateTo("/profile");
                               setIsSheetOpen(false);
@@ -298,7 +297,7 @@ const Navbar = () => {
                             My Profile
                           </div>
                           <div
-                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                            className="py-2 px-2 hover:bg-green-50 rounded-md cursor-pointer"
                             onClick={() => {
                               navigateTo("/orders");
                               setIsSheetOpen(false);
@@ -306,15 +305,7 @@ const Navbar = () => {
                           >
                             My Orders
                           </div>
-                          <div
-                            className="py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer"
-                            onClick={() => {
-                              navigateTo("/wishlist");
-                              setIsSheetOpen(false);
-                            }}
-                          >
-                            My Wishlist
-                          </div>
+                          
                         </div>
                       </div>
                     </div>
@@ -324,7 +315,7 @@ const Navbar = () => {
                 {/* Logo */}
                 <div
                   onClick={() => router.push("/")}
-                  className="flex  items-center cursor-pointer"
+                  className="flex items-center cursor-pointer"
                 >
                   <div className="relative w-16 h-16 mr-2 overflow-hidden">
                     <img
@@ -341,7 +332,7 @@ const Navbar = () => {
                 <Button
                   ref={categoryBtnRef}
                   variant="ghost"
-                  className="text-gray-800 hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                  className="text-gray-800 hover:bg-green-50 transition-colors flex items-center space-x-1"
                   onClick={() =>
                     setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
                   }
@@ -358,7 +349,7 @@ const Navbar = () => {
                     {mainCategories.map((category) => (
                       <div
                         key={category}
-                        className="px-4 py-2 hover:bg-gray-100 text-gray-800 cursor-pointer transition-colors"
+                        className="px-4 py-2 hover:bg-green-50 text-gray-800 cursor-pointer transition-colors"
                         onClick={() => handleCategoryClick(category)}
                       >
                         {category}
@@ -371,10 +362,10 @@ const Navbar = () => {
               {/* Search button (medium screens) */}
               <Button
                 variant="ghost"
-                className="hidden md:flex items-center space-x-2 text-gray-700 border border-gray-200 px-4 py-2 rounded-full hover:bg-gray-100 flex-grow max-w-md mx-6"
+                className="hidden md:flex items-center space-x-2 text-gray-700 border border-gray-200 px-4 py-2 rounded-full hover:bg-green-50 flex-grow max-w-md mx-6"
                 onClick={handleSearchClick}
               >
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-green-500" />
                 <span className="text-gray-400 text-sm">
                   Search for products...
                 </span>
@@ -390,21 +381,6 @@ const Navbar = () => {
                   onClick={handleSearchClick}
                 >
                   <Search className="h-5 w-5" />
-                </Button>
-
-                {/* Wishlist */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-gray-800 hidden sm:flex"
-                  onClick={() => navigateTo("/wishlist")}
-                >
-                  <Heart className="h-5 w-5" />
-                  {wishlistItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                      {wishlistItems.length}
-                    </span>
-                  )}
                 </Button>
 
                 {/* User account */}
@@ -426,7 +402,7 @@ const Navbar = () => {
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {cartItems.length > 0 && (
-                    <span className="absolute -top-0 -right-1 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-0 -right-1 bg-green-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
                       {totalQuantity}
                     </span>
                   )}
@@ -441,10 +417,10 @@ const Navbar = () => {
       <div className="md:hidden bg-gray-50 py-2 px-4 border-t border-gray-200">
         <Button
           variant="ghost"
-          className="w-full flex items-center justify-start space-x-2 text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full"
+          className="w-full flex items-center justify-start space-x-2 text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full hover:border-green-300"
           onClick={handleSearchClick}
         >
-          <Search className="h-4 w-4 text-gray-400" />
+          <Search className="h-4 w-4 text-green-500" />
           <span className="text-gray-400 text-sm">Search for products...</span>
         </Button>
       </div>

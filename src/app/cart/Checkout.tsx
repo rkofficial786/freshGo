@@ -59,7 +59,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchUserDetails();
-      console.log("Summary in checkout modal:", summary);
     }
   }, [isOpen]);
 
@@ -188,7 +187,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader className="h-8 w-8 animate-spin text-gray-500" />
+            <Loader className="h-8 w-8 animate-spin text-green-600" />
           </div>
         ) : (
           <div className="space-y-6">
@@ -200,7 +199,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div className="border border-gray-200 rounded-md p-4 text-center">
                   <p className="text-gray-500">No addresses found</p>
                   <Button
-                    className="mt-2 bg-black text-white hover:bg-gray-800"
+                    className="mt-2 bg-green-600 text-white hover:bg-green-700"
                     onClick={() => {
                       window.location.href = "/profile?type=addresses";
                     }}
@@ -212,9 +211,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <>
                   {/* Selected Address Preview */}
                   {selectedAddress && (
-                    <div className="border border-gray-200 hover:border-black rounded-md p-4 relative">
+                    <div className="border border-gray-200 hover:border-green-600 rounded-md p-4 relative">
                       <div className="flex items-start gap-4">
-                        <MapPin className="h-5 w-5 text-gray-500 mt-1" />
+                        <MapPin className="h-5 w-5 text-green-600 mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium">
@@ -228,7 +227,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                               {selectedAddress.addressType}
                             </Badge>
                             {selectedAddress._id === defaultAddressId && (
-                              <Badge className="bg-black text-white">
+                              <Badge className="bg-green-600 text-white">
                                 Default
                               </Badge>
                             )}
@@ -248,7 +247,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </div>
 
                       <button
-                        className="absolute top-4 right-4 flex items-center text-sm text-gray-600 hover:text-black"
+                        className="absolute top-4 right-4 flex items-center text-sm text-gray-600 hover:text-green-600"
                         onClick={() => setShowAddressList(!showAddressList)}
                       >
                         Change <ChevronDown className="h-4 w-4 ml-1" />
@@ -262,8 +261,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       {addresses.map((addr) => (
                         <div
                           key={addr._id}
-                          className={`p-3 flex items-start gap-3 hover:bg-gray-50 ${
-                            addr._id === selectedAddressId ? "bg-gray-50" : ""
+                          className={`p-3 flex items-start gap-3 hover:bg-green-50 ${
+                            addr._id === selectedAddressId ? "bg-green-50" : ""
                           }`}
                         >
                           <div
@@ -274,7 +273,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             }}
                           >
                             {addr._id === selectedAddressId ? (
-                              <Check className="h-4 w-4 text-black" />
+                              <Check className="h-4 w-4 text-green-600" />
                             ) : (
                               <div className="h-4 w-4 rounded-full border border-gray-300"></div>
                             )}
@@ -294,7 +293,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 {addr.addressType}
                               </Badge>
                               {addr._id === defaultAddressId && (
-                                <Badge className="bg-black text-white text-xs">
+                                <Badge className="bg-green-600 text-white text-xs">
                                   Default
                                 </Badge>
                               )}
@@ -309,7 +308,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           {addr._id !== defaultAddressId && (
                             <button
                               type="button"
-                              className="text-xs text-blue-600 hover:text-blue-800"
+                              className="text-xs text-green-600 hover:text-green-700"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleSetDefaultAddress(addr._id);
@@ -381,7 +380,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {/* Total */}
                 <div className="flex justify-between font-medium">
                   <span>Total</span>
-                  <span>
+                  <span className="text-green-700">
                     ₹
                     {(
                       (summary.cartTotal || 0) +
@@ -402,14 +401,19 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={setPaymentMethod}
+                className="space-y-2"
               >
-                <div className="border border-gray-200 rounded-md p-4 mb-2 flex items-center space-x-3">
-                  <RadioGroupItem value="COD" id="cod" />
+                <div className="border border-gray-200 rounded-md p-4 flex items-center space-x-3 data-[state=checked]:border-green-600 data-[state=checked]:bg-green-50">
+                  <RadioGroupItem 
+                    value="COD" 
+                    id="cod"
+                    className="text-green-600 border-green-600" 
+                  />
                   <Label
                     htmlFor="cod"
                     className="flex items-center cursor-pointer"
                   >
-                    <CreditCard className="h-5 w-5 mr-2 text-gray-600" />
+                    <CreditCard className="h-5 w-5 mr-2 text-green-600" />
                     Cash on Delivery
                   </Label>
                 </div>
@@ -426,7 +430,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </Button>
               <Button
                 onClick={handleSubmitOrder}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white"
                 disabled={submitting || !selectedAddressId}
               >
                 {submitting ? (

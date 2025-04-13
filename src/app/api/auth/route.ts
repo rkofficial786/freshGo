@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "../../../../helper/sendEmail";
-import { sendOtp } from "../../../../helper/sendOtp";
 import { generateOTP } from "../../../../helper/generateOTP";
 import User from "../../../../models/User";
 import { connectDB } from "../../../../db";
@@ -44,7 +43,7 @@ export const POST = async (req: NextRequest) => {
     // await sendOtp(phone, otp.toString());
 
     return NextResponse.json(
-      { success: true, msg: "OTP sent to email",otp },
+      { success: true, msg: "OTP sent to email", otp },
       { status: 200 }
     );
   } catch (error) {

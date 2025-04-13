@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import FloatingLabelInput from "@/components/FloatingInput";
 
 const Login = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -86,7 +86,7 @@ const Login = () => {
     <div className="min-h-[80vh] flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md mx-4 overflow-hidden border border-gray-200 shadow-lg rounded-lg">
         <div className="bg-white px-8 py-12">
-          <h2 className="text-2xl font-bold text-center text-black mb-2">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
             {isOtpSent ? "Verify Your Email" : "Login"}
           </h2>
 
@@ -107,12 +107,12 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-gray-50 border border-gray-200 rounded-md focus-within:border-black"
+                  className="bg-gray-50 border border-gray-200 rounded-md focus-within:border-green-600"
                 />
                 
                 <Button
                   type="submit"
-                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-md transition-colors"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -139,14 +139,18 @@ const Login = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-12 h-12 text-center text-xl font-medium border-2 border-gray-300 rounded-md focus:border-black focus:ring-0 transition-all"
+                      className="w-12 h-12 text-center text-xl font-medium border-2 border-gray-300 rounded-md focus:border-green-600 focus:ring-0 transition-all"
                       required
                     />
                   ))}
                 </div>
                 
+                <p className="text-center text-sm text-gray-500">
+                  Please check your spam/junk folder if you don't see the email in your inbox
+                </p>
+                
                 <Button
-                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-md transition-colors"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
                   onClick={handleVerifyOtp}
                   disabled={isVerify || otp.some(digit => digit === "")}
                 >
@@ -164,7 +168,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={handleChangeCredentials}
-                    className="text-gray-600 hover:text-black underline text-sm transition-colors"
+                    className="text-gray-600 hover:text-green-600 underline text-sm transition-colors"
                   >
                     Change email address
                   </button>
@@ -180,7 +184,7 @@ const Login = () => {
                 <button
                   onClick={handleLogin}
                   disabled={isLoading}
-                  className="text-black font-medium hover:underline transition-all"
+                  className="text-green-600 font-medium hover:underline transition-all"
                 >
                   Resend
                 </button>

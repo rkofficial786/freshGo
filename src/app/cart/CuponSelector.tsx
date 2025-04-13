@@ -18,8 +18,6 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
   const dispatch = useDispatch<any>();
   const { availableCoupons } = useSelector((state:any) => state.cart);
 
-  console.log(availableCoupons, "avalable copuns");
-
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       toast.error("Please enter a coupon code");
@@ -29,7 +27,6 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
     setIsApplying(true);
     try {
       // Call API to check if coupon is valid
-      // const response = await fetch(`/api/coupon/${couponCode}?totalPrice=${totalAmount}`);
       const { payload } = await dispatch(
         getCouponById({ amount: totalAmount, code: couponCode })
       );
@@ -104,7 +101,7 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
                 placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
-                className="w-full"
+                className="w-full border-gray-200 focus:border-green-600 focus:ring-green-600"
               />
               {availableCoupons.length > 0 && (
                 <button
@@ -124,7 +121,7 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
                   {availableCoupons.map((coupon) => (
                     <div
                       key={coupon._id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      className="p-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                       onClick={() => handleSelectCoupon(coupon)}
                     >
                       <div className="flex justify-between items-center">
@@ -149,7 +146,7 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
             <Button
               onClick={handleApplyCoupon}
               disabled={isApplying}
-              className="bg-black hover:bg-gray-800 text-white whitespace-nowrap"
+              className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
             >
               {isApplying ? "Applying..." : "Apply"}
             </Button>
@@ -158,7 +155,7 @@ const CouponSection = ({ totalAmount, onCouponApplied }) => {
           {availableCoupons?.length > 0 && (
             <div className="mt-2">
               <div
-                className="text-sm text-blue-600 cursor-pointer"
+                className="text-sm text-green-600 cursor-pointer"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
                 {isDropdownOpen

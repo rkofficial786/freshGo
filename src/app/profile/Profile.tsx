@@ -19,10 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import {
-  getUserDetails,
-  logoutApi,
-} from "@/lib/features/auth";
+import { getUserDetails, logoutApi } from "@/lib/features/auth";
 
 import ProfileInfo from "./PersonalInfo";
 import ShippingAddresses from "./Address";
@@ -67,7 +64,6 @@ const Profile = () => {
       label: "Order History",
       description: "View your past orders and track deliveries" 
     },
-    
   ];
 
   const fetchUserData = async () => {
@@ -135,11 +131,11 @@ const Profile = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Header with mobile menu toggle */}
-      <div className="bg-black text-white py-4 px-6 md:hidden flex items-center justify-between">
+      <div className="bg-green-600 text-white py-4 px-6 md:hidden flex items-center justify-between">
         <h1 className="text-xl font-bold">My Account</h1>
         <button
           onClick={toggleSidebar}
-          className="p-2 rounded-full hover:bg-gray-800"
+          className="p-2 rounded-full hover:bg-green-700"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -161,13 +157,13 @@ const Profile = () => {
           >
             {/* User Profile Summary */}
             <div className="mb-6 text-center">
-              <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto flex items-center justify-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full mx-auto flex items-center justify-center">
                 {personalInfo.name ? (
-                  <span className="text-2xl font-bold text-gray-700">
+                  <span className="text-2xl font-bold text-green-700">
                     {personalInfo.name.charAt(0).toUpperCase()}
                   </span>
                 ) : (
-                  <User className="w-10 h-10 text-gray-500" />
+                  <User className="w-10 h-10 text-green-500" />
                 )}
               </div>
               <h2 className="mt-3 font-bold text-lg text-gray-900">
@@ -191,11 +187,13 @@ const Profile = () => {
                       className={`w-full p-3 flex items-center rounded-md transition-all duration-200 
                         ${
                           activeTab === item.id
-                            ? "bg-black text-white"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-green-600 text-white"
+                            : "text-gray-700 hover:bg-green-50 hover:text-green-700"
                         }`}
                     >
-                      <item.icon className="w-5 h-5 mr-3" />
+                      <item.icon className={`w-5 h-5 mr-3 ${
+                        activeTab === item.id ? "" : "text-green-600"
+                      }`} />
                       <span>{item.label}</span>
                     </button>
                   </li>
@@ -235,7 +233,7 @@ const Profile = () => {
                     <ProfileInfo userDetails={personalInfo} />
                   )}
                   {activeTab === "addresses" && (
-                    <ShippingAddresses  />
+                    <ShippingAddresses />
                   )}
                   {activeTab === "orders" && (
                     <Orders />
@@ -246,7 +244,7 @@ const Profile = () => {
                       <p className="text-gray-500">Manage your account preferences and security options.</p>
                       
                       <div className="space-y-3">
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-medium">Password & Security</h4>
@@ -256,7 +254,7 @@ const Profile = () => {
                           </div>
                         </div>
                         
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-medium">Notification Preferences</h4>
@@ -266,7 +264,7 @@ const Profile = () => {
                           </div>
                         </div>
                         
-                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-green-600 transition-colors cursor-pointer">
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-medium">Privacy Settings</h4>

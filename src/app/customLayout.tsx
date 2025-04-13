@@ -2,21 +2,15 @@
 
 import Navbar from "@/components/navbar/Navbar";
 import { getUserDetails, logoutApi } from "@/lib/features/auth";
-import { emptyCart, getCartItems } from "@/lib/features/cart";
-
-import { X } from "lucide-react";
-import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 import { useDispatch, useSelector } from "react-redux";
 import Footer from "@/components/Footer";
-import { getAllCategories } from "@/lib/features/catogary";
+import { clearCart } from "@/lib/features/cart";
 
 const CustomeLayout = ({ children }) => {
-  const pathname = usePathname();
   const dispatch = useDispatch<any>();
   const { token } = useSelector((state: any) => state.auth);
 
@@ -24,13 +18,11 @@ const CustomeLayout = ({ children }) => {
     try {
       const { payload } = await dispatch(getUserDetails());
 
-      
-
       if (payload.success) {
       } else {
         if (payload.msg == "Unauthorized") {
           await dispatch(logoutApi());
-          dispatch(emptyCart());
+          dispatch(clearCart());
         }
       }
     } catch (error) {
@@ -42,16 +34,7 @@ const CustomeLayout = ({ children }) => {
     if (token) {
       callGetUser();
     }
-    fetchCategories();
   }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const { payload } = await dispatch(getAllCategories());
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-    }
-  };
 
   return (
     <>

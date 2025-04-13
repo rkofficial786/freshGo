@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import CouponSection from "./CuponSelector";
 
-
-const OrderSummary = ({ summary, onCheckout,couponDiscount ,setCouponDiscount }) => {
-
+const OrderSummary = ({ summary, onCheckout, couponDiscount, setCouponDiscount }) => {
   
   // Calculate final total with coupon discount
   const finalTotal = (
@@ -19,7 +17,7 @@ const OrderSummary = ({ summary, onCheckout,couponDiscount ,setCouponDiscount })
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+      <h2 className="text-lg font-semibold mb-4 text-gray-900">Order Summary</h2>
 
       <div className="space-y-3">
         <div className="flex justify-between">
@@ -63,11 +61,11 @@ const OrderSummary = ({ summary, onCheckout,couponDiscount ,setCouponDiscount })
 
         <div className="flex justify-between font-semibold text-lg">
           <span>Total</span>
-          <span>₹{finalTotal}</span>
+          <span className="text-green-700">₹{finalTotal}</span>
         </div>
 
         {summary.deliveryFee > 0 && (
-          <div className="text-sm text-gray-500 mt-2">
+          <div className="text-sm text-green-600 mt-2">
             Add ₹{(499 - (summary.cartTotal || 0)).toFixed(2)} more to get
             free delivery
           </div>
@@ -82,7 +80,7 @@ const OrderSummary = ({ summary, onCheckout,couponDiscount ,setCouponDiscount })
 
       <Button
         onClick={() => onCheckout(finalTotal)}
-        className="w-full mt-6 bg-black hover:bg-gray-800 text-white py-3"
+        className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3"
       >
         Proceed to Checkout
       </Button>

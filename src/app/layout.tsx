@@ -14,23 +14,23 @@ const robotoSlab = Roboto({
   weight: ["300", "400", "500", "700", "900"],
   variable: "--font-roboto",
 });
-
 export const metadata: any = {
   title: {
-    default: "Shreya Collection",
-    template: "%s | Shreya Collection",
+    default: "FreshGo",
+    template: "%s | FreshGo",
   },
   keywords:
-    "Shreya Collection, nightwear, nighty, loungewear, sleepwear, women's nightwear, men's nightwear, comfortable sleepwear, stylish nighty, cotton nightwear, satin nighty, pajama sets, nightdresses, luxury nightwear, soft fabric nightwear, affordable nightwear, cozy nightwear, plus-size nightwear, bridal nightwear, maternity nightwear, sleepwear for women, sleepwear for men, online nightwear store, buy nighties online, trendy nightwear, nightwear for all seasons, nightwear collection, sleep comfort, Shreya Collection fashion, best online nightwear store, shop nightwear online, bedtime essentials",
+    "FreshGo, grocery delivery, fresh fruits, vegetables, dairy, bakery, meat, seafood, organic food, online grocery, supermarket delivery, grocery store, quick delivery, food delivery, fresh produce, household essentials, pantry items, healthy food, local grocery, affordable groceries, grocery shopping, home delivery, contactless delivery, quality groceries, fresh food, farm to table, grocery app, online supermarket, grocery service, daily essentials",
 
   description:
-    "Shreya Collection specializes in high-quality nightwear and nighties for women and men. Discover comfortable, stylish sleepwear and loungewear, including cotton nighties, satin sleepwear, and more. Shop online for a cozy and restful night's sleep.",
+    "FreshGo specializes in delivering fresh, high-quality groceries straight to your doorstep. Discover a wide range of fruits, vegetables, dairy, bakery items, and more with convenient same-day delivery. Shop online for all your grocery needs with the freshness you can trust.",
 
-  image: "/assets/logo/logo.png",
-  url: "https://www.shreyacollection.in/",
+  image: "/assets/images/logo.png",
+  url: "https://www.freshgo.in/",
 
-  author: "Shreya Collection Team",
+  author: "FreshGo Team",
 };
+
 
 export default function RootLayout({
   children,

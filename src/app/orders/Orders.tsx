@@ -27,7 +27,7 @@ import {
 import { useDispatch } from "react-redux";
 import { getOrdersData } from "@/lib/features/order";
 
-// Helper function to format date
+
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
@@ -37,7 +37,7 @@ const formatDate = (dateString) => {
   }).format(date);
 };
 
-// Status Badge component
+
 const StatusBadge = ({ status }) => {
   let color;
   switch (status) {
@@ -67,7 +67,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Order Status Timeline component
+
 const OrderStatus = ({ status }) => {
   const steps = [
     { id: "pending", label: "Order Placed", icon: <Package size={18} /> },
@@ -114,7 +114,7 @@ const OrderStatus = ({ status }) => {
   );
 };
 
-// Order Details component for the modal
+
 const OrderDetails = ({ order }) => {
   return (
     <div className="space-y-6 p-4">

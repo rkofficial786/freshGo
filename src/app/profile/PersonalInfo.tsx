@@ -28,12 +28,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-
-
-const ProfileInfo: React.FC<any> = ({
-  setIsOtpModalOpen,
-  isOtpModalOpen,
-}) => {
+const ProfileInfo: React.FC<any> = ({ userDetails }) => {
   const [personalInfo, setPersonalInfo] = useState<any>({
     name: "",
     email: "",
@@ -41,19 +36,30 @@ const ProfileInfo: React.FC<any> = ({
     _id: "",
   });
 
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [profileUpdating, setProfileUpdating] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const dispatch = useDispatch<any>();
 
   useEffect(() => {
-    fetchUserDetails();
-  }, []);
+    if (userDetails && Object.keys(userDetails).length > 0) {
+      setPersonalInfo({
+        name: userDetails.name || "",
+        email: userDetails.email || "",
+        phone: userDetails.phone || "",
+        _id: userDetails._id || "",
+      });
+      setNewEmail(userDetails.email || "");
+    } else {
+      fetchUserDetails();
+    }
+  }, [userDetails]);
 
   const fetchUserDetails = async () => {
     try {
       const { payload } = await dispatch(getUserDetails());
-      
+
       if (payload.success) {
         setPersonalInfo({
           name: payload.user.name || "",
@@ -134,7 +140,7 @@ const ProfileInfo: React.FC<any> = ({
 
   return (
     <Card className="bg-white border-gray-200">
-      <CardHeader className="bg-gray-50 border-b border-gray-200">
+      <CardHeader className="bg-green-50 border-b border-gray-200">
         <CardTitle className="text-xl font-semibold text-gray-900">
           Personal Information
         </CardTitle>
@@ -146,14 +152,14 @@ const ProfileInfo: React.FC<any> = ({
               Full Name
             </Label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+              <User className="absolute left-3 top-3 h-4 w-4 text-green-600" />
               <Input
                 id="name"
                 name="name"
                 value={personalInfo.name}
                 onChange={handlePersonalInfoChange}
                 placeholder="Your full name"
-                className="pl-10 border-gray-200 focus:border-black focus:ring-black"
+                className="pl-10 border-gray-200 focus:border-green-600 focus:ring-green-600"
               />
             </div>
           </div>
@@ -162,7 +168,7 @@ const ProfileInfo: React.FC<any> = ({
               Email Address
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-green-600" />
               <Input
                 id="email"
                 name="email"
@@ -170,7 +176,7 @@ const ProfileInfo: React.FC<any> = ({
                 value={personalInfo.email}
                 onChange={handlePersonalInfoChange}
                 placeholder="Your email address"
-                className="pl-10 border-gray-200 focus:border-black focus:ring-black"
+                className="pl-10 border-gray-200 focus:border-green-600 focus:ring-green-600"
               />
             </div>
           </div>
@@ -179,14 +185,14 @@ const ProfileInfo: React.FC<any> = ({
               Phone Number
             </Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-green-600" />
               <Input
                 id="phone"
                 name="phone"
                 value={personalInfo.phone}
                 onChange={handlePersonalInfoChange}
                 placeholder="Your phone number"
-                className="pl-10 border-gray-200 focus:border-black focus:ring-black"
+                className="pl-10 border-gray-200 focus:border-green-600 focus:ring-green-600"
               />
             </div>
           </div>
@@ -197,7 +203,7 @@ const ProfileInfo: React.FC<any> = ({
         <div className="flex justify-end">
           <Button
             onClick={handleUpdateProfile}
-            className="bg-black hover:bg-gray-800 text-white"
+            className="bg-green-600 hover:bg-green-700 text-white"
             disabled={profileUpdating}
           >
             {profileUpdating ? (
@@ -233,7 +239,7 @@ const ProfileInfo: React.FC<any> = ({
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    className="border-gray-200 focus:border-black focus:ring-black"
+                    className="border-gray-200 focus:border-green-600 focus:ring-green-600"
                   />
                 ))}
               </InputOTPGroup>
@@ -242,7 +248,7 @@ const ProfileInfo: React.FC<any> = ({
           <DialogFooter>
             <Button
               onClick={handleVerifyEmail}
-              className="w-full bg-black hover:bg-gray-800 text-white"
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
               disabled={profileUpdating}
             >
               {profileUpdating ? (

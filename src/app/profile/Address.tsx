@@ -234,7 +234,7 @@ const ShippingAddresses: React.FC = () => {
 
   return (
     <Card className="bg-white border-gray-200">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 bg-gray-50">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 bg-green-50">
         <CardTitle className="text-xl font-semibold text-gray-900">
           Shipping Addresses
         </CardTitle>
@@ -246,7 +246,7 @@ const ShippingAddresses: React.FC = () => {
                 setEditingAddress(null);
                 setNewAddress(initialAddressState);
               }}
-              className="bg-black hover:bg-gray-800 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               <Plus className="mr-2 h-4 w-4" /> Add Address
             </Button>
@@ -272,7 +272,7 @@ const ShippingAddresses: React.FC = () => {
                   name="name"
                   value={newAddress.name}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
+                  className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -284,7 +284,7 @@ const ShippingAddresses: React.FC = () => {
                   name="address"
                   value={newAddress.address}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
+                  className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -296,7 +296,7 @@ const ShippingAddresses: React.FC = () => {
                   name="mobile"
                   value={newAddress.mobile}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
+                  className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600"
                 />
               </div>
 
@@ -309,7 +309,7 @@ const ShippingAddresses: React.FC = () => {
                   name="state"
                   value={newAddress.state}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
+                  className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -323,7 +323,7 @@ const ShippingAddresses: React.FC = () => {
                     handleSelectChange("country", value)
                   }
                 >
-                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-black focus:ring-black">
+                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600">
                     <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
@@ -341,7 +341,7 @@ const ShippingAddresses: React.FC = () => {
                   name="zipCode"
                   value={newAddress.zipCode}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
+                  className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -358,7 +358,7 @@ const ShippingAddresses: React.FC = () => {
                     handleSelectChange("addressType", value)
                   }
                 >
-                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-black focus:ring-black">
+                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-green-600 focus:ring-green-600">
                     <SelectValue placeholder="Address Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -372,7 +372,7 @@ const ShippingAddresses: React.FC = () => {
             <DialogFooter>
               <Button
                 onClick={handleAddressSubmit}
-                className="bg-black text-white hover:bg-gray-800"
+                className="bg-green-600 text-white hover:bg-green-700"
                 disabled={isSubmitting}
               >
                 {isSubmitting
@@ -388,7 +388,7 @@ const ShippingAddresses: React.FC = () => {
       <CardContent className="p-6">
         {addresses.length === 0 ? (
           <div className="text-center py-16 flex flex-col justify-center items-center">
-            <MapPin className="mx-auto h-12 w-12 text-gray-300" />
+            <MapPin className="mx-auto h-12 w-12 text-green-300" />
             <h3 className="mt-2 text-base font-medium text-gray-900">
               No addresses found
             </h3>
@@ -397,7 +397,7 @@ const ShippingAddresses: React.FC = () => {
             </p>
             <Button
               onClick={() => setIsAddressModalOpen(true)}
-              className="mt-6 bg-black hover:bg-gray-800 text-white"
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white"
             >
               <Plus className="mr-2 h-4 w-4" /> Add New Address
             </Button>
@@ -409,7 +409,7 @@ const ShippingAddresses: React.FC = () => {
                 key={addr?._id}
                 className={`p-4 border hover:shadow-md transition-shadow ${
                   addr?._id === defaultAddress
-                    ? "bg-gray-50 border-black"
+                    ? "bg-green-50 border-green-600"
                     : "bg-white border-gray-200"
                 }`}
               >
@@ -418,7 +418,7 @@ const ShippingAddresses: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium text-gray-900">{addr.name}</h3>
                       {addr._id === defaultAddress && (
-                        <Badge className="bg-black text-white hover:bg-gray-800">
+                        <Badge className="bg-green-600 text-white hover:bg-green-700">
                           Default
                         </Badge>
                       )}
@@ -443,6 +443,7 @@ const ShippingAddresses: React.FC = () => {
                     <Switch
                       checked={addr?._id === defaultAddress}
                       onCheckedChange={() => handleSetDefaultAddress(addr?._id)}
+                      className="data-[state=checked]:bg-green-600"
                     />
                     <Label className="text-sm text-gray-700 cursor-pointer">
                       Default
@@ -453,7 +454,7 @@ const ShippingAddresses: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditAddress(addr)}
-                      className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-900"
+                      className="text-green-600 hover:text-green-700 border-gray-200 hover:border-green-600"
                     >
                       <Edit className="mr-1 h-4 w-4" /> Edit
                     </Button>

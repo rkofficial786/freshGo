@@ -74,7 +74,7 @@ const EcommerceParallaxHero = () => {
 
       <div className="pattern-layer absolute top-0 left-0 w-full h-full opacity-[0.08] z-[2] mix-blend-overlay will-change-transform transform translate-z-0"></div>
 
-      <div className="hero-overlay absolute top-0 left-0 w-full h-full bg-gradient-to-br from-green-700/85 to-blue-600/80 z-[3] opacity-70 will-change-opacity transition-opacity duration-50"></div>
+      <div className="hero-overlay absolute top-0 left-0 w-full h-full bg-gradient-to-br from-green-700/90 to-green-500/80 z-[3] opacity-70 will-change-opacity transition-opacity duration-50"></div>
 
       <div className="glow-layer absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-radial-gradient z-[4] mix-blend-screen opacity-50 transform translate-z-0 will-change-transform"></div>
 
@@ -84,8 +84,8 @@ const EcommerceParallaxHero = () => {
             <div
               key={i}
               className={`absolute w-[6px] h-[6px] rounded-full bg-white/40 animate-float-particle will-change-transform ${
-                i % 2 === 0 ? "w-[8px] h-[8px] bg-blue-300/30" : ""
-              } ${i % 3 === 0 ? "w-[4px] h-[4px] bg-yellow-300/30" : ""}`}
+                i % 2 === 0 ? "w-[8px] h-[8px] bg-green-200/30" : ""
+              } ${i % 3 === 0 ? "w-[4px] h-[4px] bg-green-100/30" : ""}`}
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
@@ -102,7 +102,7 @@ const EcommerceParallaxHero = () => {
         <div className="max-w-[1200px] mx-auto transform-style-3d">
           <h1 className="text-5xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight relative text-shadow-lg transform translate-z-[60px]">
             Fresh Groceries Delivered
-            <span className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-[120px] h-[8px] bg-yellow-400 rounded-md -z-10 opacity-80 shadow-yellow"></span>
+            <span className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-[120px] h-[8px] bg-green-300 rounded-md -z-10 opacity-80 shadow-green"></span>
           </h1>
           <p className="text-xl md:text-2xl text-white mb-12 max-w-[800px] mx-auto opacity-95 font-light transform translate-z-[40px] text-shadow-md">
             Quality products from farm to your doorstep, making healthy living
@@ -119,7 +119,7 @@ const EcommerceParallaxHero = () => {
             ].map((category, index) => (
               <div
                 key={index}
-                className="py-2 px-5 bg-white/15 backdrop-blur-md rounded-full text-white text-base font-medium tracking-wide transition-all duration-300 border border-white/20 shadow-xl opacity-0 translate-y-5 animate-fade-in-up hover:translate-y-[-5px] hover:scale-105 hover:bg-white/25 hover:border-white/40 cursor-pointer"
+                className="py-2 px-5 bg-white/15 backdrop-blur-md rounded-full text-white text-base font-medium tracking-wide transition-all duration-300 border border-white/20 shadow-xl opacity-0 translate-y-5 animate-fade-in-up hover:translate-y-[-5px] hover:scale-105 hover:bg-green-400/25 hover:border-white/40 cursor-pointer"
                 style={{
                   animationDelay: `${0.2 + index * 0.1}s`,
                 }}

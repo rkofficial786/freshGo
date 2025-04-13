@@ -4,8 +4,6 @@ import { persistStore, persistReducer } from "redux-persist";
 import { combineReducers } from "redux";
 import LoadSlice from "./features/loading";
 import AuthSlice from "./features/auth";
-import categorySlice from "./features/catogary";
-import instaSlice from "./features/insta";
 import cartSlice from "./features/cart";
 // import storage from "redux-persist/lib/storage";
 import {
@@ -17,30 +15,24 @@ import {
   REHYDRATE,
 } from "redux-persist";
 import storage from "./customStorage";
-import bannerSlice from "./features/banner";
-import wishlistSlice from "./features/wishlist";
-import miscSlice from "./features/misc";
 import orderSlice from "./features/order";
 import productSlice from "./features/products";
+import miscSlice from "./features/misc";
 // Define the persist config
 const persistConfig = {
   key: "freshGo",
   storage,
 
-  whitelist: ["cart", "auth", "wishlist", "order","category"],
+  whitelist: ["cart", "auth",  "order", "category"],
 };
 
 // Combine your reducers
 const rootReducer = combineReducers({
   auth: AuthSlice,
   load: LoadSlice,
-  category: categorySlice,
-  insta: instaSlice,
   cart: cartSlice,
-  banner: bannerSlice,
-  wishlist: wishlistSlice,
-  misc: miscSlice,
   order: orderSlice,
+  misc: miscSlice,
   product: productSlice,
 });
 

@@ -3,6 +3,7 @@
 FreshGo is a full-featured e-commerce platform for a grocery store, offering fresh produce and household essentials with a seamless shopping experience.
 
 **Live Demo**: [https://fresh-go-zeta.vercel.app/](https://fresh-go-zeta.vercel.app/)
+
 admin route : https://fresh-go-zeta.vercel.app/admin
 
 admin email : super@gmail.com

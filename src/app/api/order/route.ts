@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
 import Order from "../../../../models/Order";
-import Coupon from "../../../../models/Coupon";
 import Product from "../../../../models/Product";
 import User from "../../../../models/User";
 import "../../../../models/Address";
-import "../../../../models/Exchange";
-import Address from "../../../../models/Address";
 
 connectDB();
 
-// Helper function to generate exerciseId
-const generateOrderId = async (): Promise<string> => {
+// Helper function to generate order ID
+const generateOrderId = async () => {
   const lastOrder = await Order.findOne().sort({ createdAt: -1 });
-  if (lastOrder && lastOrder !== null && lastOrder.orderId) {
+  if (lastOrder && lastOrder.orderId) {
     const lastIdNumber = parseInt(lastOrder.orderId.split("-")[1]);
     const newIdNumber = lastIdNumber + 1;
-    return `ON-${newIdNumber.toString().padStart(6, "0")}`;
+    return `GRO-${newIdNumber.toString().padStart(6, "0")}`;
   }
-  return "ON-000001";
+  return "GRO-000001";
 };
 
 export const POST = async (req: NextRequest) => {
@@ -26,187 +23,155 @@ export const POST = async (req: NextRequest) => {
     const userId = req.headers.get("x-user-id");
     if (!userId) {
       return NextResponse.json(
-        { success: false, msg: "Please provide User Id" },
+        { success: false, msg: "Please login to place an order" },
         { status: 400 }
       );
     }
-    const user = await User.findById(userId);
+
+    const user = await User.findById(userId).populate("defaultAddress");
     if (!user) {
       return NextResponse.json(
-        { success: false, msg: "Unauthorized" },
+        { success: false, msg: "User not found" },
         { status: 401 }
       );
     }
+
     const body = await req.json();
-    const { productDetails, couponCode } = body;
-    console.log(couponCode, "couponcode");
+    const {
+      items,
+      couponDiscount = 0,
+      shippingAddressId,
+      paymentMethod = "COD",
+    } = body;
 
     // Validate input
-    if (
-      !userId ||
-      !productDetails ||
-      !Array.isArray(productDetails) ||
-      productDetails.length === 0
-    ) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
-        { success: false, msg: "Invalid input" },
+        { success: false, msg: "Your cart is empty" },
         { status: 400 }
       );
     }
 
-    // Fetch unique product details from the database
-    const uniqueProductIds = [
-      ...new Set(productDetails.map((pd) => pd.product)),
-    ];
-    const products = await Product.find({ _id: { $in: uniqueProductIds } });
+    // Fetch product details from the database
+    const productIds = items.map((item) => item.productId);
+    const products = await Product.find({ _id: { $in: productIds } });
 
-    if (products.length !== uniqueProductIds.length) {
-      return NextResponse.json(
-        { success: false, msg: "Some products not found" },
-        { status: 404 }
-      );
-    }
+    // Calculate order totals
+    let subtotal = 0;
+    let mrpTotal = 0;
+    let shippingCost = 40; // Default shipping cost
 
-    // Calculate total actual price and total offer price
-    let totalActualPrice = 0;
-    let totalOfferPrice = 0;
-    let totalQuantity = 0;
-    let shippingCost = 0;
+    // Process order items
+    const orderItems = items
+      .map((item) => {
+        const product = products.find(
+          (p) => p._id.toString() === item.productId
+        );
 
-    const outOfStockProducts: string[] = [];
-    const processedProductDetails = productDetails
-      .map((pd) => {
-        const product = products.find((p) => p._id.toString() === pd.product);
+        if (!product) return null;
 
-        if (product) {
-          const quantity = pd.count || 1;
-          const selectedSize = pd.size;
+        // Calculate item price
+        const itemTotal = product.price * item.quantity;
+        const itemMrp = (product.mrp || product.price) * item.quantity;
 
-          // Find the size object from the product's sizes array
-          const sizeObj = product.sizes.find(
-            (size: any) => size._id.toString() === selectedSize
-          );
+        subtotal += itemTotal;
+        mrpTotal += itemMrp;
 
-          if (!sizeObj || sizeObj.stock < quantity) {
-            outOfStockProducts.push(product._id.toString());
-            return null;
-          } else {
-            // Update total prices
-            totalActualPrice += product.actualPrice * quantity;
-            if (quantity % 4 === 0 && sizeObj.comboPrice) {
-              totalOfferPrice += sizeObj.comboPrice * (quantity / 4);
-            } else if (quantity > 4 && sizeObj.comboPrice) {
-              const forComboPrice =
-                sizeObj.comboPrice * Math.floor(quantity / 4);
-              const remainingProductPrice =
-                (sizeObj.offerPrice || product.actualPrice) * (quantity % 4);
-              totalOfferPrice += remainingProductPrice + forComboPrice;
-            } else {
-              totalOfferPrice +=
-                (sizeObj.offerPrice || product.actualPrice) * quantity;
-            }
-            totalQuantity += quantity;
-            shippingCost =
-              totalQuantity === 0 ? 0 : 45 + 24 * (totalQuantity - 1);
-
-            // Return the product and size details statically
-            return {
-              product: product,
-              size: sizeObj,
-              count: quantity,
-            };
-          }
-        }
-        return null;
+        return {
+          product: product._id,
+          name: product.name,
+          price: product.price,
+          mrp: product.mrp || product.price,
+          quantity: item.quantity,
+          total: itemTotal,
+          img: product.img,
+        };
       })
-      .filter((pd) => pd !== null);
+      .filter((item) => item !== null);
 
-    // If there are out-of-stock products, return them in the response
-    if (outOfStockProducts.length > 0) {
+    // Apply free shipping if order subtotal > 499
+    if (subtotal > 499) {
+      shippingCost = 0;
+    }
+
+    // Calculate tax (GST - 5%)
+    const tax = Math.round((subtotal - couponDiscount) * 0.05 * 100) / 100;
+
+    // Calculate the total payable amount
+    const total =
+      Math.round((subtotal - couponDiscount + shippingCost + tax) * 100) / 100;
+
+    // Get shipping address - either specified one or default
+    let shippingAddress;
+
+    if (shippingAddressId) {
+      shippingAddress = user.address?.find(
+        (addr) => addr._id.toString() === shippingAddressId
+      );
+    } else if (user.defaultAddress) {
+      shippingAddress = user.defaultAddress;
+    }
+
+    if (!shippingAddress) {
       return NextResponse.json(
-        {
-          success: false,
-          msg: "Some products are out of stock",
-          outOfStockProducts,
-        },
+        { success: false, msg: "Please add a delivery address" },
         { status: 400 }
       );
     }
 
-    // Calculate discount based on the coupon code
-    let discount = 0;
-    if (couponCode) {
-      const coupon = await Coupon.findOne({ couponCode });
-      console.log(coupon, "coupon");
-      if (coupon) {
-        const isValid =
-          coupon.validity &&
-          new Date(coupon.validity) > new Date() &&
-          coupon.availableFor > coupon.userCount &&
-          coupon.purchaseAmount <= totalOfferPrice;
+    // Generate order ID
+    const orderId = await generateOrderId();
 
-        console.log(isValid, "isvalid");
-        const hasUserUsedCoupon = coupon.user.includes(userId);
-        if (isValid && (!hasUserUsedCoupon || coupon.multiUse)) {
-          if (coupon.type === "percentage") {
-            discount = (totalOfferPrice * coupon.off) / 100;
-            discount = Math.min(discount, coupon.amount);
-          } else if (coupon.type === "flat") {
-            discount = coupon.off;
-            discount = Math.min(discount, coupon.amount);
-          }
-          // discount = Math.min(discount, totalOfferPrice); // Discount should not exceed total offer price
+    // Create estimated delivery date (5 days from now)
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + 5);
 
-          // If multiUse is false, add userId to coupon's userId array
-          if (!coupon.multiUse) {
-            coupon.user.push(userId);
-          }
-          // Increment userCount
-          coupon.userCount += 1;
-          await coupon.save();
-        }
-      }
-    }
-
-    const generatedOrderId = await generateOrderId();
-
-    // Calculate Shipping Cost
-    // const shippingCost = processedProductDetails.reduce((sum, v)=>sum+(v.count*70), 0);
-
-    // shippingCost = shippingCost;
-
-    // Calculate the total payable price
-    let totalPayablePrice = totalOfferPrice - discount + shippingCost;
-    totalPayablePrice = Math.max(totalPayablePrice, 1);
-
-    const shippingAddress = await Address.findById(user.defaultAddress);
-
-    // Create and save the order
+    // Create the order
     const newOrder = new Order({
-      orderId: generatedOrderId,
+      orderId,
       user: userId,
-      productDetails: processedProductDetails,
-      totalPrice: totalActualPrice,
-      payablePrice: totalPayablePrice,
-      off: discount,
+      items: orderItems,
+      mrpTotal,
+      subtotal,
+      productDiscount: mrpTotal - subtotal,
+      couponDiscount,
+      tax,
+      shippingCost,
+      total,
       shippingAddress,
+      status: "pending",
+      paymentStatus: "pending",
+      paymentMethod,
+      expectedDelivery: deliveryDate,
     });
 
     await newOrder.save();
 
-    // Return the total payable price in the response
+    // Update product stock
+    for (const item of items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stockQuantity: -item.quantity },
+      });
+    }
+
     return NextResponse.json(
       {
         success: true,
-        msg: "Order created successfully",
-        orderDetails: newOrder,
+        msg: "Your order has been placed successfully!",
+        order: {
+          orderId: newOrder.orderId,
+          total: newOrder.total,
+          items: orderItems.length,
+          status: "pending",
+          expectedDelivery: deliveryDate,
+        },
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error) {
-    console.log("Error to create order", error);
+    console.error("Error creating order:", error);
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { success: false, msg: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }
@@ -215,37 +180,171 @@ export const POST = async (req: NextRequest) => {
 export const GET = async (req: NextRequest) => {
   try {
     const userId = req.headers.get("x-user-id");
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, msg: "Please login to view your orders" },
+        { status: 400 }
+      );
+    }
 
-    const orders = await Order.find({ user: userId }).populate(["user"]).lean();
-    // Manually populate the size details from the product's sizes array
-    //  const populatedOrders = await Promise.all(
-    //   orders.map(async (order: any) => {
-    //     const populatedProductDetails = await Promise.all(
-    //       order.productDetails.map(async (detail: any) => {
-    //         const product = detail.product;
-    //         const sizeDetail = product.sizes.find(
-    //           (size: any) => String(size._id) === String(detail.size)
-    //         );
-    //         return {
-    //           ...detail,
-    //           sizeDetail, // Attach the size detail to the order
-    //         };
-    //       })
-    //     );
-    //     return {
-    //       ...order,
-    //       productDetails: populatedProductDetails,
-    //     };
-    //   })
-    // );
-    return NextResponse.json(
-      { success: true, msg: "Success", orders: orders },
-      { status: 200 }
-    );
+    // Get query parameters
+    const url = new URL(req.url);
+    const orderId = url.searchParams.get("orderId");
+    
+    if (orderId) {
+      // Return a specific order with all details
+      const order = await Order.findOne({ 
+        orderId, 
+        user: userId 
+      })
+      .populate({
+        path: 'shippingAddress',
+        model: 'Address'
+      })
+      .populate({
+        path: 'items.product',
+        model: 'Product',
+        select: 'name description category tags img stockQuantity mrp price unit'
+      });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, msg: "Order not found" },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          success: true, 
+          order: {
+            _id: order._id,
+            orderId: order.orderId,
+            user: order.user,
+            items: order.items.map(item => ({
+              _id: item._id,
+              product: {
+                _id: item.product._id,
+                name: item.product.name,
+                description: item.product.description,
+                category: item.product.category,
+                tags: item.product.tags,
+                img: item.product.img,
+                stockQuantity: item.product.stockQuantity,
+                mrp: item.product.mrp,
+                price: item.product.price,
+                unit: item.product.unit
+              },
+              name: item.name,
+              price: item.price,
+              mrp: item.mrp,
+              quantity: item.quantity,
+              total: item.total,
+              img: item.img
+            })),
+            mrpTotal: order.mrpTotal,
+            subtotal: order.subtotal,
+            productDiscount: order.productDiscount,
+            couponDiscount: order.couponDiscount,
+            tax: order.tax,
+            shippingCost: order.shippingCost,
+            total: order.total,
+            shippingAddress: {
+              _id: order.shippingAddress._id,
+              name: order.shippingAddress.name,
+              address: order.shippingAddress.address,
+              mobile: order.shippingAddress.mobile,
+              country: order.shippingAddress.country,
+              state: order.shippingAddress.state,
+              addressType: order.shippingAddress.addressType,
+              zipCode: order.shippingAddress.zipCode
+            },
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            paymentMethod: order.paymentMethod,
+            expectedDelivery: order.expectedDelivery,
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt
+          }
+        },
+        { status: 200 }
+      );
+    } else {
+      // Return all orders for the user with comprehensive details
+      const orders = await Order.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'shippingAddress',
+          model: 'Address'
+        })
+        .populate({
+          path: 'items.product',
+          model: 'Product',
+          select: 'name description category tags img stockQuantity mrp price unit'
+        });
+      
+      // Transform orders to include comprehensive details
+      const transformedOrders = orders.map(order => ({
+        _id: order._id,
+        orderId: order.orderId,
+        items: order.items.map(item => ({
+          _id: item._id,
+          product: {
+            _id: item.product._id,
+            name: item.product.name,
+            description: item.product.description,
+            category: item.product.category,
+            tags: item.product.tags,
+            img: item.product.img,
+            stockQuantity: item.product.stockQuantity,
+            mrp: item.product.mrp,
+            price: item.product.price,
+            unit: item.product.unit
+          },
+          name: item.name,
+          price: item.price,
+          mrp: item.mrp,
+          quantity: item.quantity,
+          total: item.total,
+          img: item.img
+        })),
+        mrpTotal: order.mrpTotal,
+        subtotal: order.subtotal,
+        productDiscount: order.productDiscount,
+        couponDiscount: order.couponDiscount,
+        tax: order.tax,
+        shippingCost: order.shippingCost,
+        total: order.total,
+        shippingAddress: {
+          _id: order.shippingAddress._id,
+          name: order.shippingAddress.name,
+          address: order.shippingAddress.address,
+          mobile: order.shippingAddress.mobile,
+          country: order.shippingAddress.country,
+          state: order.shippingAddress.state,
+          addressType: order.shippingAddress.addressType,
+          zipCode: order.shippingAddress.zipCode
+        },
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        expectedDelivery: order.expectedDelivery,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt
+      }));
+      
+      return NextResponse.json(
+        { 
+          success: true, 
+          orders: transformedOrders 
+        },
+        { status: 200 }
+      );
+    }
   } catch (error) {
-    console.log("Error to get order", error);
+    console.error("Error fetching orders:", error);
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { success: false, msg: "Failed to fetch orders", error: error.message },
       { status: 500 }
     );
   }

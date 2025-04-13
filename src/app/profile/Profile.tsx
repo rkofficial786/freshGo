@@ -4,159 +4,124 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiEdit2,
-  FiTrash2,
-  FiPlus,
-  FiShoppingBag,
-} from "react-icons/fi";
-import { Badge, Loader, MapPin, Menu, User } from "lucide-react";
+  User,
+  MapPin,
+  ShoppingBag,
+  LogOut,
+  Menu,
+  ChevronRight,
+  Settings,
+  CircleUser,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-import {
-  getAllAddress,
-  makeDefaultAddress,
-  updateAddress,
-  deleteAddress,
-  AddNewAddress,
-} from "@/lib/features/address";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 import {
   getUserDetails,
   logoutApi,
-  updateUserDetails,
 } from "@/lib/features/auth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import ButtonMain from "@/components/ButtonMain";
 
-import { IoMdExit } from "react-icons/io";
 import ProfileInfo from "./PersonalInfo";
 import ShippingAddresses from "./Address";
-// import Orders from "../orders/Orders";
-import { FaShoppingBag } from "react-icons/fa";
-import Subscriptions from "./Subscriptions";
-import { emptyCart } from "@/lib/features/cart";
-import { MdOutlineMarkEmailRead } from "react-icons/md";
 import Orders from "../orders/Orders";
 
 const Profile = () => {
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type") || "personal";
+  const dispatch = useDispatch<any>();
+  const router = useRouter();
+  
+  const [userDetails, setUserDetails] = useState({});
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [defaultAddress, setDefaultAddress] = useState("");
   const [personalInfo, setPersonalInfo] = useState({
     name: "",
     email: "",
     phone: "",
     _id: "",
   });
-
-  const searchParams = useSearchParams();
-
-  const type = searchParams.get("type") || "personal";
-  const dispatch = useDispatch<any>();
-  const [addresses, setAddresses] = useState([]);
-  const [editingAddress, setEditingAddress] = useState(null);
-  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [defaultAddress, setDefaultAddress] = useState("");
-  const [userDetails, setUserDetails] = useState({});
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [profileUpdating, setProfileUpdating] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const cartItems = useSelector((state: any) => state.cart.items);
-  const router = useRouter();
-
+  
   const [activeTab, setActiveTab] = useState(type);
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
   const sidebarRef = useRef(null);
 
-  const initialAddressState = {
-    address: "",
-    mobile: "",
-    country: "India",
-    state: "",
-    name: "",
-    addressType: "Home",
-    zipCode: "",
-  };
+  const menuItems = [
+    { 
+      id: "personal", 
+      icon: CircleUser, 
+      label: "Personal Information",
+      description: "Manage your personal details and preferences" 
+    },
+    { 
+      id: "addresses", 
+      icon: MapPin, 
+      label: "Addresses",
+      description: "Manage your delivery locations" 
+    },
+    { 
+      id: "orders", 
+      icon: ShoppingBag, 
+      label: "Order History",
+      description: "View your past orders and track deliveries" 
+    },
+    { 
+      id: "settings", 
+      icon: Settings, 
+      label: "Account Settings",
+      description: "Manage account preferences and security" 
+    }
+  ];
 
-  const [newAddress, setNewAddress] = useState(initialAddressState);
-
-  const callGetAllAddress = async () => {
+  const fetchUserData = async () => {
     try {
       const { payload } = await dispatch(getUserDetails());
 
       if (payload.success) {
-        setAddresses(payload?.user?.address);
+        setAddresses(payload?.user?.address || []);
         setPersonalInfo({
-          name: payload?.user?.name,
-          email: payload.user.email,
-          phone: payload.user.phone,
+          name: payload?.user?.name || "",
+          email: payload.user.email || "",
+          phone: payload.user.phone || "",
           _id: payload.user._id,
         });
-        setNewEmail(payload.user.email);
         setUserDetails(payload.user);
+        
         if (payload?.user?.defaultAddress) {
           setDefaultAddress(payload?.user?.defaultAddress?._id);
         }
       } else {
-        toast.error(payload.msg);
+        toast.error(payload.msg || "Failed to load user details");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching user data:", error);
+      toast.error("Something went wrong while loading your profile");
     }
   };
 
   useEffect(() => {
-    callGetAllAddress();
+    fetchUserData();
   }, []);
 
   const handleLogout = async () => {
-    const { payload }: any = await dispatch(logoutApi());
-    if (payload.success) {
-      toast.success("Logout Success");
-      dispatch(emptyCart());
-      router.push("/");
-    } else {
-      toast.error(payload.msg);
+    try {
+      const { payload } = await dispatch(logoutApi());
+      if (payload.success) {
+        toast.success("Successfully logged out");
+        router.push("/");
+      } else {
+        toast.error(payload.msg || "Failed to logout");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Something went wrong during logout");
     }
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   useEffect(() => {
@@ -170,125 +135,159 @@ const Profile = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setIsSidebarOpen]);
-  
+  }, []);
 
   return (
-    <div className="bg-primary-50">
-      <div className="container mx-auto p-6 space-y-6 pt-16 flex min-h-screen relative ">
-        {/* Sidebar toggle button */}
+    <div className="bg-gray-50 min-h-screen">
+      {/* Header with mobile menu toggle */}
+      <div className="bg-black text-white py-4 px-6 md:hidden flex items-center justify-between">
+        <h1 className="text-xl font-bold">My Account</h1>
         <button
-          className="md:hidden fixed top-34 right-4 z-[600] p-2 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-colors"
           onClick={toggleSidebar}
+          className="p-2 rounded-full hover:bg-gray-800"
         >
           <Menu className="w-6 h-6" />
         </button>
+      </div>
 
-        {/* Sidebar */}
-        <div
-          ref={sidebarRef}
-          className={`
-          fixed md:sticky top-0 left-0 h-[100vh] z-0
-          w-64 p-4 mr-8 border-r border-primary-700
-          ${isSidebarOpen ? "z-[600]" : isOtpModalOpen ? "z-[10]" : "z-[100]"}
-          transition-all duration-300 ease-in-out
-          ${isSidebarOpen ? "translate-x-0 bg-white" : "-translate-x-full"}
-          md:translate-x-0 md:bg-transparent
-          shadow-lg md:shadow-none
-        `}
-        >
-          <h2 className="text-2xl font-bold mb-6 text-primary-800">
-            My Profile
-          </h2>
-          <ul className="space-y-2">
-            {[
-              { id: "personal", icon: User, label: "Personal Information" },
-              { id: "addresses", icon: MapPin, label: "Shipping Addresses" },
-              { id: "orders", icon: FiShoppingBag, label: "Orders" },
-              {
-                id: "logout",
-                icon: IoMdExit,
-                label: "Logout",
-                onClick: handleLogout,
-              },
-            ].map((item) => (
-              <li key={item.id}>
-                <button
-                  className={`w-full text-left flex items-center p-2 rounded transition-colors ${
-                    activeTab === item.id
-                      ? "bg-primary-100 text-primary-950"
-                      : "text-primary-900 hover:bg-primary-50"
-                  }`}
-                  onClick={() =>
-                    item.onClick ? item.onClick() : setActiveTab(item.id)
-                  }
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1  p-6 rounded-lg shadow-md">
-          {activeTab === "personal" && (
-            <ProfileInfo
-              isOtpModalOpen={isOtpModalOpen}
-              setIsOtpModalOpen={setIsOtpModalOpen}
-            />
-          )}
-          {activeTab === "addresses" && <ShippingAddresses />}
-          {activeTab === "orders" && <Orders />}
-          {activeTab === "subscriptions" && <Subscriptions />}
-        </div>
-
-        {/* OTP Dialog */}
-        {/* <Dialog open={isOtpModalOpen} onOpenChange={setIsOtpModalOpen}>
-          <DialogContent className="sm:max-w-[425px] bg-primary-50">
-            <DialogHeader>
-              <DialogTitle className="text-primary-800">
-                Verify Email
-              </DialogTitle>
-              <DialogDescription className="text-primary-600">
-                Enter the 6-digit OTP sent to your email {personalInfo.email}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center space-y-4 py-4">
-              <InputOTP
-                value={otp}
-                onChange={(value) => setOtp(value)}
-                maxLength={6}
-              >
-                <InputOTPGroup>
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="border-primary-300 focus:border-primary-500"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={handleVerifyEmail}
-                className="w-full bg-primary-600 text-white hover:bg-primary-700"
-              >
-                {profileUpdating ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
+      <div className="container mx-auto p-4 md:p-6 space-y-6 relative">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar / Navigation */}
+          <aside
+            ref={sidebarRef}
+            className={`
+              md:w-1/4 lg:w-1/5 bg-white rounded-lg shadow-sm border border-gray-200
+              transition-all duration-300 ease-in-out
+              fixed md:sticky top-0 right-0 h-screen md:h-auto z-50 md:z-auto
+              ${isSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
+              w-3/4 sm:w-1/2
+              p-5
+            `}
+          >
+            {/* User Profile Summary */}
+            <div className="mb-6 text-center">
+              <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto flex items-center justify-center">
+                {personalInfo.name ? (
+                  <span className="text-2xl font-bold text-gray-700">
+                    {personalInfo.name.charAt(0).toUpperCase()}
+                  </span>
                 ) : (
-                  "Verify Email"
+                  <User className="w-10 h-10 text-gray-500" />
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog> */}
+              </div>
+              <h2 className="mt-3 font-bold text-lg text-gray-900">
+                {personalInfo.name || "Guest User"}
+              </h2>
+              <p className="text-sm text-gray-500">{personalInfo.email || ""}</p>
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* Navigation Menu */}
+            <nav>
+              <ul className="space-y-1">
+                {menuItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 flex items-center rounded-md transition-all duration-200 
+                        ${
+                          activeTab === item.id
+                            ? "bg-black text-white"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                    >
+                      <item.icon className="w-5 h-5 mr-3" />
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+
+                {/* Logout Button */}
+                <li className="mt-6">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full p-3 flex items-center text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
+                  >
+                    <LogOut className="w-5 h-5 mr-3" />
+                    <span>Logout</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="flex-1">
+            {/* Section Header */}
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {menuItems.find(item => item.id === activeTab)?.label || "My Account"}
+              </h1>
+              <p className="text-gray-500">
+                {menuItems.find(item => item.id === activeTab)?.description || "Manage your account"}
+              </p>
+            </div>
+
+            {/* Content Card */}
+            <Card className="border-gray-200 shadow-sm">
+              <CardContent className="p-0">
+                <div className="p-6">
+                  {activeTab === "personal" && (
+                    <ProfileInfo userDetails={personalInfo} />
+                  )}
+                  {activeTab === "addresses" && (
+                    <ShippingAddresses  />
+                  )}
+                  {activeTab === "orders" && (
+                    <Orders />
+                  )}
+                  {activeTab === "settings" && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Account Settings</h3>
+                      <p className="text-gray-500">Manage your account preferences and security options.</p>
+                      
+                      <div className="space-y-3">
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-medium">Password & Security</h4>
+                              <p className="text-sm text-gray-500">Manage password and security questions</p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-medium">Notification Preferences</h4>
+                              <p className="text-sm text-gray-500">Manage how you receive notifications</p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        <div className="border border-gray-200 rounded-md p-4 hover:border-black transition-colors cursor-pointer">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-medium">Privacy Settings</h4>
+                              <p className="text-sm text-gray-500">Control your data and privacy options</p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
       </div>
     </div>
   );

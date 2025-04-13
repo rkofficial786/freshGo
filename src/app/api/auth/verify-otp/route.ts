@@ -50,13 +50,11 @@ export const POST = async (req: NextRequest) => {
 
       // Set the token in a cookie
       const cookieOptions = {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
+        httpOnly: true, // Prevent JavaScript access for security
+        secure: process.env.NODE_ENV === "production", // Only use HTTPS in production
         maxAge: 30 * 24 * 60 * 60, // 30 days
         path: "/",
-        domain: ".shreyacollection.in",
       };
-
       return new NextResponse(
         JSON.stringify({
           success: true,

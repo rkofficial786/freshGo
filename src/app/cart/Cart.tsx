@@ -1,27 +1,31 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft } from "lucide-react";
-import Image from "next/image";
+import { ShoppingCart, ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   getCartItems,
+  getVisibleCoupons,
   removeFromCart,
   updateQuantity,
 } from "@/lib/features/cart";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import OrderSummary from "./CartSummary";
+import CheckoutModal from "./Checkout";
 
 const CartPage = () => {
   const dispatch = useDispatch<any>();
   const router = useRouter();
-
+  const [finalAmount, setFinalAmount] = useState(0);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
   const { items, products, summary, loading, error } = useSelector(
-    (state) => state.cart
+    (state: any) => state.cart
   );
-  const { token } = useSelector((state) => state.auth);
+  const { token } = useSelector((state: any) => state.auth);
 
   // Fetch product details whenever cart items change
   useEffect(() => {
@@ -29,6 +33,11 @@ const CartPage = () => {
       dispatch(getCartItems({ cartItems: items }));
     }
   }, [items, dispatch]);
+
+  // Fetch available coupons
+  useEffect(() => {
+    dispatch(getVisibleCoupons());
+  }, [dispatch]);
 
   const handleRemoveItem = (productId) => {
     dispatch(removeFromCart(productId));
@@ -40,9 +49,9 @@ const CartPage = () => {
 
   const handleCheckout = () => {
     if (!token) {
-      router.push("/login?redirect=checkout");
+      router.push("/login?redirect=cart");
     } else {
-      router.push("/checkout");
+      setIsCheckoutModalOpen(true);
     }
   };
 
@@ -215,75 +224,17 @@ const CartPage = () => {
 
         {/* Order Summary */}
         <div className="lg:w-1/3">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">
-                  Subtotal ({summary.totalQuantity} items)
-                </span>
-                <span>₹{summary.mrpTotal?.toFixed(2) || 0}</span>
-              </div>
-
-              {summary.discount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Discount</span>
-                  <span className="text-green-600">
-                    -₹{summary.discount?.toFixed(2) || 0}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
-                {summary.deliveryFee > 0 ? (
-                  <span>₹{summary.deliveryFee?.toFixed(2) || 0}</span>
-                ) : (
-                  <span className="text-green-600">Free</span>
-                )}
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax (GST)</span>
-                <span>₹{summary.tax?.toFixed(2) || 0}</span>
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="flex justify-between font-semibold text-lg">
-                <span>Total</span>
-                <span>
-                  ₹
-                  {(
-                    (summary.cartTotal || 0) +
-                    (summary.deliveryFee || 0) +
-                    (summary.tax || 0)
-                  ).toFixed(2)}
-                </span>
-              </div>
-
-              {summary.deliveryFee > 0 && (
-                <div className="text-sm text-gray-500 mt-2">
-                  Add ₹{(499 - (summary.cartTotal || 0)).toFixed(2)} more to get
-                  free delivery
-                </div>
-              )}
-            </div>
-
-            <Button
-              onClick={handleCheckout}
-              className="w-full mt-6 bg-black hover:bg-gray-800 text-white py-3"
-            >
-              Proceed to Checkout
-            </Button>
-
-            <div className="mt-6 text-sm text-center text-gray-500">
-              <p>We accept all major credit cards and UPI payments</p>
-            </div>
-          </div>
+          <OrderSummary couponDiscount={couponDiscount} setCouponDiscount={setCouponDiscount} summary={summary} onCheckout={handleCheckout} />
         </div>
       </div>
+
+      <CheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        summary={{ ...summary, couponDiscount }}
+        products={products}
+        cartItems={items}
+      />
     </div>
   );
 };

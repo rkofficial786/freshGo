@@ -18,6 +18,7 @@ const cartSlice = createSlice({
     },
     loading: false,
     error: null,
+    availableCoupons: [],
   },
   reducers: {
     addToCart: (state, action) => {
@@ -122,13 +123,21 @@ const cartSlice = createSlice({
       .addCase(getCartItems.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload?.msg || "Failed to fetch cart products";
-      });
+      })
+      .addCase(getVisibleCoupons.fulfilled, (state, { payload }) => {
+        console.log(payload, "payload copuns");
+
+        if (payload.success) {
+          state.availableCoupons = payload.coupons;
+        }
+      })
+      .addCase(getCouponById.fulfilled, (state, { payload }) => {});
   },
 });
 
 export const { addToCart, removeFromCart, updateQuantity, clearCart } =
   cartSlice.actions;
 
-  export {getCartItems}
+export { getCartItems, getVisibleCoupons, getCouponById };
 
 export default cartSlice.reducer;

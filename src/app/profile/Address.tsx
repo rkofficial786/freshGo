@@ -1,6 +1,17 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { FiMapPin, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import {
+  MapPin,
+  Edit,
+  Trash2,
+  Plus,
+  CheckCircle,
+  Home,
+  Briefcase,
+  ClipboardList,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Dialog,
@@ -36,27 +49,27 @@ import {
   AddNewAddress,
 } from "@/lib/features/address";
 import { getUserDetails } from "@/lib/features/auth";
-import ButtonMain from "@/components/ButtonMain";
 
-const ShippingAddresses = () => {
+const ShippingAddresses: React.FC = () => {
   const dispatch = useDispatch<any>();
-  const [addresses, setAddresses] = useState([]);
-  const [editingAddress, setEditingAddress] = useState(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [editingAddress, setEditingAddress] = useState<any | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const initialAddressState = {
+  const initialAddressState: any = {
     address: "",
     mobile: "",
     country: "India",
     state: "",
     name: "",
-    city:"",
+    city: "",
     addressType: "Home",
     zipCode: "",
   };
 
-  const [newAddress, setNewAddress] = useState(initialAddressState);
+  const [newAddress, setNewAddress] = useState<any>(initialAddressState);
 
   useEffect(() => {
     fetchAddresses();
@@ -73,10 +86,11 @@ const ShippingAddresses = () => {
           setDefaultAddress(payload?.user?.defaultAddress?._id);
         }
       } else {
-        toast.error(payload.msg);
+        toast.error(payload.msg || "Failed to load addresses");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error loading addresses:", error);
+      toast.error("Failed to load addresses");
     }
   };
 
@@ -90,20 +104,40 @@ const ShippingAddresses = () => {
       if (payload.success) {
         setAddresses(payload.addresses);
       } else {
-        toast.error(payload.msg);
+        toast.error(payload.msg || "Failed to fetch addresses");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching addresses:", error);
       toast.error("Failed to fetch addresses");
     }
   };
 
-  const handleNewAddressChange = (e) => {
+  const handleNewAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setNewAddress({ ...newAddress, [name]: value });
   };
 
   const handleAddressSubmit = async () => {
     try {
+      setIsSubmitting(true);
+
+      // Simple validation
+      if (
+        !newAddress.name ||
+        !newAddress.address ||
+        !newAddress.mobile ||
+        !newAddress.zipCode
+      ) {
+        toast.error("Please fill all required fields");
+        setIsSubmitting(false);
+        return;
+      }
+
       let payload;
       if (editingAddress) {
         payload = await dispatch(
@@ -117,35 +151,41 @@ const ShippingAddresses = () => {
       }
 
       if (payload.payload.success) {
-        toast.success(payload.payload.msg);
+        toast.success(payload.payload.msg || "Address saved successfully");
         setNewAddress(initialAddressState);
         setIsAddressModalOpen(false);
         fetchAddresses();
       } else {
-        toast.error(payload.payload.msg);
+        toast.error(payload.payload.msg || "Failed to save address");
       }
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to add/update address");
+      console.error("Error saving address:", error);
+      toast.error("Failed to save address");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteAddress = async (id) => {
+  const handleDeleteAddress = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this address?")) {
+      return;
+    }
+
     try {
       const { payload } = await dispatch(deleteAddress(id));
       if (payload.success) {
-        toast.success(payload.msg);
+        toast.success(payload.msg || "Address deleted successfully");
         fetchAddresses();
       } else {
-        toast.error(payload.msg);
+        toast.error(payload.msg || "Failed to delete address");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error deleting address:", error);
       toast.error("Failed to delete address");
     }
   };
 
-  const handleSetDefaultAddress = async (id) => {
+  const handleSetDefaultAddress = async (id: string) => {
     try {
       const { payload } = await dispatch(
         makeDefaultAddress({
@@ -153,30 +193,52 @@ const ShippingAddresses = () => {
         })
       );
       if (payload.success) {
-        toast.success(payload.msg);
+        toast.success(payload.msg || "Default address updated");
+        setDefaultAddress(id);
         callGetAllAddress();
       } else {
-        toast.error(payload.msg);
+        toast.error(payload.msg || "Failed to update default address");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error setting default address:", error);
       toast.error("Failed to set default address");
     }
   };
 
-  const handleEditAddress = (address) => {
+  const handleEditAddress = (address: any) => {
     setEditingAddress(address);
-    setNewAddress(address);
+    setNewAddress({
+      name: address.name,
+      address: address.address,
+      mobile: address.mobile,
+      country: address.country,
+      state: address.state,
+      city: address.city || "",
+      addressType: address.addressType,
+      zipCode: address.zipCode,
+    });
     setIsAddressModalOpen(true);
   };
 
+  // Function to get address type icon
+  const getAddressTypeIcon = (type: string) => {
+    switch (type) {
+      case "Home":
+        return <Home className="w-4 h-4" />;
+      case "Work":
+        return <Briefcase className="w-4 h-4" />;
+      default:
+        return <ClipboardList className="w-4 h-4" />;
+    }
+  };
+
   return (
-    <Card className="bg-transparent border-none shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-2xl font-bold text-primary-800">
+    <Card className="bg-white border-gray-200">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 bg-gray-50">
+        <CardTitle className="text-xl font-semibold text-gray-900">
           Shipping Addresses
         </CardTitle>
-        <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen} >
+        <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
           <DialogTrigger asChild>
             <Button
               variant="outline"
@@ -184,17 +246,17 @@ const ShippingAddresses = () => {
                 setEditingAddress(null);
                 setNewAddress(initialAddressState);
               }}
-              className="bg-primary-600 hover:bg-primary-700 text-white hover:opacity-90"
+              className="bg-black hover:bg-gray-800 text-white"
             >
-              <FiPlus className="mr-2" /> Add
+              <Plus className="mr-2 h-4 w-4" /> Add Address
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-primary-50 z-50">
+          <DialogContent className="sm:max-w-[500px] bg-white">
             <DialogHeader>
-              <DialogTitle className="text-primary-800">
+              <DialogTitle className="text-gray-900">
                 {editingAddress ? "Edit Address" : "Add New Address"}
               </DialogTitle>
-              <DialogDescription className="text-primary-600">
+              <DialogDescription className="text-gray-600">
                 {editingAddress
                   ? "Edit your shipping address details below."
                   : "Enter your new shipping address details."}
@@ -202,80 +264,67 @@ const ShippingAddresses = () => {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right text-primary-700">
-                  Name
+                <Label htmlFor="name" className="text-right text-gray-700">
+                  Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
                   name="name"
                   value={newAddress.name}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
+                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="address" className="text-right text-primary-700">
-                  Address
+                <Label htmlFor="address" className="text-right text-gray-700">
+                  Address <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   id="address"
                   name="address"
                   value={newAddress.address}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
+                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="mobile" className="text-right text-primary-700">
-                  Mobile
+                <Label htmlFor="mobile" className="text-right text-gray-700">
+                  Mobile <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="mobile"
                   name="mobile"
                   value={newAddress.mobile}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
+                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="city" className="text-right text-primary-700">
-                 City
-                </Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={newAddress.city}
-                  onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="state" className="text-right text-primary-700">
-                 State
+                <Label htmlFor="state" className="text-right text-gray-700">
+                  State <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="state"
                   name="state"
                   value={newAddress.state}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
+                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="country" className="text-right text-primary-700">
+                <Label htmlFor="country" className="text-right text-gray-700">
                   Country
                 </Label>
                 <Select
                   name="country"
                   value={newAddress.country}
                   onValueChange={(value) =>
-                    handleNewAddressChange({
-                      target: { name: "country", value },
-                    })
+                    handleSelectChange("country", value)
                   }
                 >
-                  <SelectTrigger className="col-span-3 border-primary-300 focus:border-primary-500">
-                    <SelectValue  placeholder="Select Country" />
+                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-black focus:ring-black">
+                    <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="India">India</SelectItem>
@@ -284,21 +333,21 @@ const ShippingAddresses = () => {
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="zipCode" className="text-right text-primary-700">
-                  Pin Code
+                <Label htmlFor="zipCode" className="text-right text-gray-700">
+                  Pin Code <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="zipCode"
                   name="zipCode"
                   value={newAddress.zipCode}
                   onChange={handleNewAddressChange}
-                  className="col-span-3 border-primary-300 focus:border-primary-500"
+                  className="col-span-3 border-gray-200 focus:border-black focus:ring-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label
                   htmlFor="addressType"
-                  className="text-right text-primary-700"
+                  className="text-right text-gray-700"
                 >
                   Type
                 </Label>
@@ -306,12 +355,10 @@ const ShippingAddresses = () => {
                   name="addressType"
                   value={newAddress.addressType}
                   onValueChange={(value) =>
-                    handleNewAddressChange({
-                      target: { name: "addressType", value },
-                    })
+                    handleSelectChange("addressType", value)
                   }
                 >
-                  <SelectTrigger className="col-span-3 border-primary-300 focus:border-primary-500">
+                  <SelectTrigger className="col-span-3 border-gray-200 focus:border-black focus:ring-black">
                     <SelectValue placeholder="Address Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -325,88 +372,98 @@ const ShippingAddresses = () => {
             <DialogFooter>
               <Button
                 onClick={handleAddressSubmit}
-                className="bg-primary-600 text-white hover:bg-primary-700"
+                className="bg-black text-white hover:bg-gray-800"
+                disabled={isSubmitting}
               >
-                {editingAddress ? "Update Address" : "Add Address"}
+                {isSubmitting
+                  ? "Saving..."
+                  : editingAddress
+                  ? "Update Address"
+                  : "Add Address"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {addresses.length === 0 ? (
-          <div className="text-center py-8 flex flex-col justify-center items-center">
-            <FiMapPin className="mx-auto h-12 w-12 text-primary-400" />
-            <h3 className="mt-2 text-sm font-semibold text-primary-800">
-              No addresses
+          <div className="text-center py-16 flex flex-col justify-center items-center">
+            <MapPin className="mx-auto h-12 w-12 text-gray-300" />
+            <h3 className="mt-2 text-base font-medium text-gray-900">
+              No addresses found
             </h3>
-            <p className="mt-1 text-sm text-primary-600">
-              Get started by adding a new address.
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by adding your first shipping address.
             </p>
-            <ButtonMain
-              showArrow={false}
+            <Button
               onClick={() => setIsAddressModalOpen(true)}
-              className="mt-6 text-white bg-primary-600 hover:bg-primary-700"
+              className="mt-6 bg-black hover:bg-gray-800 text-white"
             >
-              <FiPlus className="mr-2" /> Add New Address
-            </ButtonMain>
+              <Plus className="mr-2 h-4 w-4" /> Add New Address
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
             {addresses.map((addr) => (
               <Card
                 key={addr?._id}
-                className="p-6 space-y-4 hover:shadow-lg transition-shadow bg-primary-100"
+                className={`p-4 border hover:shadow-md transition-shadow ${
+                  addr?._id === defaultAddress
+                    ? "bg-gray-50 border-black"
+                    : "bg-white border-gray-200"
+                }`}
               >
                 <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-lg text-primary-800">
-                        {addr.name}
-                      </h3>
-                      {addr.isDefault && (
-                        <span className="bg-primary-200 text-primary-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-900">{addr.name}</h3>
+                      {addr._id === defaultAddress && (
+                        <Badge className="bg-black text-white hover:bg-gray-800">
                           Default
-                        </span>
+                        </Badge>
                       )}
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1 text-xs text-gray-600 border-gray-200"
+                      >
+                        {getAddressTypeIcon(addr.addressType)}{" "}
+                        {addr.addressType}
+                      </Badge>
                     </div>
-                    <p className="text-primary-700">{addr.address}</p>
-                    <p className="text-primary-700">
-                     {addr.city} {addr.state}, {addr.country} - {addr.zipCode}
+                    <p className="text-gray-700">{addr.address}</p>
+                    <p className="text-gray-700">
+                      {addr.city} {addr.state}, {addr.country} - {addr.zipCode}
                     </p>
-                    <p className="text-primary-700">Phone: {addr.mobile}</p>
-                    <p className="text-sm text-primary-600">
-                      {addr.addressType}
-                    </p>
+                    <p className="text-gray-700">Phone: {addr.mobile}</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-primary-200">
-                  <div className="flex items-center space-x-2">
+                <Separator className="my-3" />
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
                     <Switch
                       checked={addr?._id === defaultAddress}
                       onCheckedChange={() => handleSetDefaultAddress(addr?._id)}
-                      className="data-[state=checked]:bg-primary-600"
                     />
-                    <Label className="text-sm text-primary-700">
-                      Set as default
+                    <Label className="text-sm text-gray-700 cursor-pointer">
+                      Default
                     </Label>
                   </div>
-                  <div className="space-x-2">
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditAddress(addr)}
-                      className="text-primary-600 hover:text-primary-700 hover:bg-primary-200 border-primary-300"
+                      className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-900"
                     >
-                      <FiEdit2 className="mr-1" /> Edit
+                      <Edit className="mr-1 h-4 w-4" /> Edit
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteAddress(addr?._id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+                      className="text-red-600 hover:text-red-700 border-gray-200 hover:border-red-200"
                     >
-                      <FiTrash2 className="mr-1" /> Delete
+                      <Trash2 className="mr-1 h-4 w-4" /> Delete
                     </Button>
                   </div>
                 </div>

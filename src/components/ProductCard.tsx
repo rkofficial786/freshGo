@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/lib/features/cart";
+import toast from "react-hot-toast";
 
 const ProductCard = ({ product }) => {
   const router = useRouter();
   const dispatch = useDispatch<any>();
   const navigateToProduct = () => {
-    router.push(`/product/${product.id}`);
+    router.push(
+      `/product-detail/${product.id}/${product.name.split(" ").join("-")}`
+    );
   };
   console.log(product, "prodycts");
 
@@ -33,7 +36,6 @@ const ProductCard = ({ product }) => {
   const addToCartClick = (e) => {
     e.stopPropagation(); // Prevent card click navigation
 
-    // Example: Dispatch add to cart action
     dispatch(
       addToCart({
         productId: product.id,
@@ -41,6 +43,8 @@ const ProductCard = ({ product }) => {
         quantity: 1,
       })
     );
+
+    toast.success(`${product.name} is added to cart`);
 
     console.log("Added to cart:", product.name);
   };

@@ -148,7 +148,7 @@ const Profile = () => {
             className={`
               md:w-1/4 lg:w-1/5 
               bg-white rounded-lg shadow-sm border border-gray-200
-              md:sticky md:top-[120px] md:h-[calc(100vh-3rem)]
+              md:sticky top-[120px] md:h-[calc(100vh-3rem)]
               transition-all duration-300 ease-in-out
               ${isSidebarOpen ? "fixed inset-y-0 right-0 z-50 w-3/4 sm:w-1/2 translate-x-0" : "fixed inset-y-0 right-0 z-50 w-3/4 sm:w-1/2 translate-x-full md:translate-x-0 md:static md:z-0"}
               p-5 overflow-y-auto

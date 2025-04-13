@@ -69,7 +69,7 @@ const EcommerceParallaxHero = () => {
     <section className="relative w-full h-[calc(100vh-80px)] overflow-hidden z-10 perspective-1000">
       <div
         className="parallax-bg absolute top-[-20%] left-0 w-full h-[140%] bg-cover bg-center bg-no-repeat will-change-transform z-[1] transform translate-z-0 backface-hidden"
-        style={{ backgroundImage: "url('/assets/images/grocieries.jpg')" }}
+        style={{ backgroundImage: "url('/assets/images/Grocieries.jpg')" }}
       ></div>
 
       <div className="pattern-layer absolute top-0 left-0 w-full h-full opacity-[0.08] z-[2] mix-blend-overlay will-change-transform transform translate-z-0"></div>

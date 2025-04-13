@@ -106,10 +106,10 @@ const OrdersPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Payment Statuses</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
-            <SelectItem value="Failed">Failed</SelectItem>
-            <SelectItem value="Refunded">Refunded</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
+            <SelectItem value="refunded">Refunded</SelectItem>
           </SelectContent>
         </Select>
 
@@ -119,11 +119,11 @@ const OrdersPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Order Statuses</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Processing">Processing</SelectItem>
-            <SelectItem value="Shipped">Shipped</SelectItem>
-            <SelectItem value="Delivered">Delivered</SelectItem>
-            <SelectItem value="Cancelled">Cancelled</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="shipped">Shipped</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -147,11 +147,11 @@ const OrdersPage = () => {
                 <React.Fragment key={order._id}>
                   <TableRow>
                     <TableCell>{order.orderId}</TableCell>
-                    <TableCell>₹ {order.totalPrice.toFixed(2)}</TableCell>
+                    <TableCell>₹ {order.total.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          order.paymentStatus === "Completed"
+                          order.paymentStatus === "completed"
                             ? "default"
                             : "secondary"
                         }
@@ -160,7 +160,7 @@ const OrdersPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{order.orderStatus}</Badge>
+                      <Badge variant="outline">{order.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <Button
@@ -198,13 +198,19 @@ const OrdersPage = () => {
                                       <span className="font-semibold">
                                         Name:
                                       </span>{" "}
-                                      {order?.user?.name}
+                                      {order.user.name}
                                     </p>
                                     <p>
                                       <span className="font-semibold">
                                         Email:
                                       </span>{" "}
-                                      {order?.user?.email}
+                                      {order.user.email}
+                                    </p>
+                                    <p>
+                                      <span className="font-semibold">
+                                        Mobile:
+                                      </span>{" "}
+                                      {order.user.mobile}
                                     </p>
                                   </div>
                                 </CardContent>
@@ -219,14 +225,14 @@ const OrdersPage = () => {
                                 </CardHeader>
                                 <CardContent>
                                   <div className="space-y-2">
-                                    <p>{order?.shippingAddress?.name}</p>
-                                    <p>{order?.shippingAddress?.address}</p>
+                                    <p>{order.shippingAddress.name}</p>
+                                    <p>{order.shippingAddress.address}</p>
                                     <p>
-                                      {order?.shippingAddress?.state},{" "}
-                                      {order?.shippingAddress?.zipCode}
+                                      {order.shippingAddress.state},{" "}
+                                      {order.shippingAddress.zipCode}
                                     </p>
-                                    <p>{order?.shippingAddress?.country}</p>
-                                    <p>{order?.shippingAddress?.phone}</p>
+                                    <p>{order.shippingAddress.country}</p>
+                                    <p>{order.shippingAddress.mobile}</p>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -244,19 +250,31 @@ const OrdersPage = () => {
                                       <span className="font-semibold">
                                         Status:
                                       </span>{" "}
-                                      {order?.paymentStatus}
+                                      {order.paymentStatus}
                                     </p>
                                     <p>
                                       <span className="font-semibold">
                                         Method:
                                       </span>{" "}
-                                      {order?.paymentMethod}
+                                      {order.paymentMethod}
                                     </p>
                                     <p>
                                       <span className="font-semibold">
                                         Total:
                                       </span>{" "}
-                                      ₹ {order?.totalPrice?.toFixed(2)}
+                                      ₹ {order.total.toFixed(2)}
+                                    </p>
+                                    <p>
+                                      <span className="font-semibold">
+                                        Subtotal:
+                                      </span>{" "}
+                                      ₹ {order.subtotal.toFixed(2)}
+                                    </p>
+                                    <p>
+                                      <span className="font-semibold">
+                                        Shipping Cost:
+                                      </span>{" "}
+                                      ₹ {order.shippingCost.toFixed(2)}
                                     </p>
                                   </div>
                                 </CardContent>
@@ -275,7 +293,7 @@ const OrdersPage = () => {
                                     <p className="font-semibold">Order Date:</p>
                                     <p>
                                       {new Date(
-                                        order?.createdAt
+                                        order.createdAt
                                       ).toLocaleDateString()}
                                     </p>
                                   </div>
@@ -287,25 +305,35 @@ const OrdersPage = () => {
                                     <p className="font-semibold">
                                       Total Price:
                                     </p>
-                                    <p>₹ {order.totalPrice.toFixed(2)}</p>
+                                    <p>₹ {order.total.toFixed(2)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold">
+                                      Expected Delivery:
+                                    </p>
+                                    <p>
+                                      {new Date(
+                                        order.expectedDelivery
+                                      ).toLocaleDateString()}
+                                    </p>
                                   </div>
                                 </div>
                                 <Separator className="my-4" />
                                 <h4 className="font-semibold mb-2">Products</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {order.products.map((item) => (
+                                  {order.items.map((item) => (
                                     <div
                                       key={item._id}
                                       className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg"
                                     >
                                       <img
-                                        src={item.product.img}
-                                        alt={item.product.name}
+                                        src={item.img}
+                                        alt={item.name}
                                         className="w-20 h-20 object-cover rounded"
                                       />
                                       <div className="flex-grow">
                                         <p className="font-medium">
-                                          {item.product.name}
+                                          {item.name}
                                         </p>
                                         <p className="text-sm text-gray-600">
                                           Quantity: {item.quantity}
@@ -313,6 +341,10 @@ const OrdersPage = () => {
                                         <p className="text-sm text-gray-600">
                                           Unit Price: ₹{" "}
                                           {item.price.toFixed(2)}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          MRP: ₹{" "}
+                                          {item.mrp.toFixed(2)}
                                         </p>
                                         <p className="text-sm font-semibold mt-1">
                                           Subtotal: ₹{" "}
@@ -333,26 +365,26 @@ const OrdersPage = () => {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                   <Select
-                                    defaultValue={order.orderStatus}
+                                    defaultValue={order.status}
                                     onValueChange={setNewStatus}
                                   >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="Pending">
+                                      <SelectItem value="pending">
                                         Pending
                                       </SelectItem>
-                                      <SelectItem value="Processing">
+                                      <SelectItem value="processing">
                                         Processing
                                       </SelectItem>
-                                      <SelectItem value="Shipped">
+                                      <SelectItem value="shipped">
                                         Shipped
                                       </SelectItem>
-                                      <SelectItem value="Delivered">
+                                      <SelectItem value="delivered">
                                         Delivered
                                       </SelectItem>
-                                      <SelectItem value="Cancelled">
+                                      <SelectItem value="cancelled">
                                         Cancelled
                                       </SelectItem>
                                     </SelectContent>

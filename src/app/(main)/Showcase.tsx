@@ -52,7 +52,7 @@ const Showcase = () => {
     {
       id: 5,
       name: "Sweet Delicacies",
-      category: "Snacks",
+      category: "Beverages",
       image: "/assets/images/Rasgulla.jpg",
       colSpan: "col-span-1",
       rowSpan: "row-span-1",

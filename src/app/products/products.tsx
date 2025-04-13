@@ -58,12 +58,14 @@ const Products = () => {
       try {
         setIsLoading(true);
 
+        console.log(filters, "filters");
+
         // Base query parameters from URL
         const baseParams: any = {
           limit: "16",
           page: page.toString(),
           search: searchParams.get("search") || "",
-          category: searchParams.get("category") || "",
+          category: filters?.category || searchParams.get("category") || "",
           isFeatured: searchParams.get("isFeatured") || "",
           sort: filters?.sort || searchParams.get("sort") || "",
         };

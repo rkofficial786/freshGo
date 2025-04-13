@@ -13,34 +13,21 @@ export interface OrderDetails {
 }
 // Function to send an email
 export const sendUserOrderEmail = async (orderDetails: any) => {
+  console.log(orderDetails,"orderdetauls ");
+  
   try {
     // Create a transporter
     let transporter = nodemailer.createTransport({
-      host: "smtpout.secureserver.net",
+      host: 'smtp.gmail.com', // Gmail SMTP
       port: 465,
-      // service: 'gmail',
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER, // Your email address
-        pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // // Read the email template
-
-    // const templatePath = path.join(
-    //   process.cwd(),
-    //   "emailTemplate/order-template-user.html"
-    // );
-    // const template = fs.readFileSync(templatePath, "utf-8");
-
-    // // Replace placeholders with actual order details
-    // const emailContent = template
-    //   .replace("{{orderId}}", orderDetails.orderId)
-    //   .replace("{{customerName}}", orderDetails.customerName)
-    //   .replace("{{totalAmount}}", orderDetails.totalAmount)
-    //   .replace("{{orderDate}}", orderDetails.orderDate);
-
-    const emailContent = orderUserTemplate(orderDetails)
+    const emailContent = orderUserTemplate(orderDetails);
 
     // Define email options
     const mailOptions = {

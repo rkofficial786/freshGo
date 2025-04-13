@@ -99,6 +99,21 @@ const Navbar = () => {
     }, 0);
   };
 
+  // Add this function to handle search submission
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+      setIsSearchActive(false);
+    }
+  };
+
+  // Handle key press for search input
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const fetchSearchSuggestions = useCallback(
     async (value: string) => {
       if (!value.trim()) {
@@ -172,14 +187,25 @@ const Navbar = () => {
                   placeholder="Search for products..."
                   className="flex-grow bg-gray-100 text-gray-900 border-none rounded-l-full py-3 px-6 focus:outline-none focus:ring-2 focus:ring-gray-400"
                   onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setIsSearchActive(false)}
+                  onClick={() => {
+                    if (searchTerm.trim()) {
+                      handleSearch();
+                    } else {
+                      setIsSearchActive(false);
+                    }
+                  }}
                   className="bg-black hover:bg-gray-800 text-white rounded-r-full h-[50px] rounded-l-none"
                 >
-                  <X className="h-5 w-5" />
+                  {searchTerm.trim() ? (
+                    <Search className="h-5 w-5" />
+                  ) : (
+                    <X className="h-5 w-5" />
+                  )}
                 </Button>
               </div>
 
@@ -202,7 +228,7 @@ const Navbar = () => {
                       className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center"
                       onClick={() => {
                         setSearchTerm(item.name);
-                        router.push(`/products/?search=${item.name}`);
+                        router.push(`/products?search=${encodeURIComponent(item.name)}`);
                         setTimeout(() => {
                           setIsSearchActive(false);
                         }, 500);

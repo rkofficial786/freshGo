@@ -67,12 +67,7 @@ const Profile = () => {
       label: "Order History",
       description: "View your past orders and track deliveries" 
     },
-    { 
-      id: "settings", 
-      icon: Settings, 
-      label: "Account Settings",
-      description: "Manage account preferences and security" 
-    }
+    
   ];
 
   const fetchUserData = async () => {

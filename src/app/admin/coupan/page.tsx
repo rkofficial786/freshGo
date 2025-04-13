@@ -218,7 +218,7 @@ const Coupons = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Amount(% if percentage selected)</Label>
               <Input
                 id="amount"
                 name="amount"

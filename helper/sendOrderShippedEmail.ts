@@ -2,27 +2,30 @@ import nodemailer from "nodemailer";
 import { orderShippedTemplate } from "../emailTemplate/order-shipped";
 
 export interface OrderDetails {
-    trackingId: string,
-    deliveryPartner: string,
-    userName: string,
-    userEmail: string,
-    companyName: string
+  trackingId: string;
+  deliveryPartner: string;
+  userName: string;
+  userEmail: string;
+  companyName: string;
 }
 // Function to send an email
 export const sendOrderShippedEmail = async (orderDetails: OrderDetails) => {
+  console.log(orderDetails,"order details");
+  
   try {
     // Create a transporter
     let transporter = nodemailer.createTransport({
-      host: "smtpout.secureserver.net",
+      host: "smtp.gmail.com", // Gmail SMTP
       port: 465,
-      // service: 'gmail',
+      secure: true,
+
       auth: {
-        user: process.env.EMAIL_USER, // Your email address
-        pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    const emailContent = orderShippedTemplate(orderDetails)
+    const emailContent = orderShippedTemplate(orderDetails);
 
     // Define email options
     const mailOptions = {

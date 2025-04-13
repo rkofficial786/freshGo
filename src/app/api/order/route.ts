@@ -4,6 +4,7 @@ import Order from "../../../../models/Order";
 import Product from "../../../../models/Product";
 import User from "../../../../models/User";
 import "../../../../models/Address";
+import { sendUserOrderEmail } from "../../../../helper/sendUserOrderEmail";
 
 connectDB();
 
@@ -52,16 +53,13 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // Fetch product details from the database
     const productIds = items.map((item) => item.productId);
     const products = await Product.find({ _id: { $in: productIds } });
 
-    // Calculate order totals
     let subtotal = 0;
     let mrpTotal = 0;
-    let shippingCost = 40; // Default shipping cost
+    let shippingCost = 50;
 
-    // Process order items
     const orderItems = items
       .map((item) => {
         const product = products.find(
@@ -154,6 +152,20 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
+    const emailDetails = {
+      orderId: newOrder.orderId,
+      customerName: user.name,
+      totalAmount: total.toFixed(2),
+      orderDate: new Date().toLocaleDateString(),
+      customerEmail: user.email,
+      user: user,
+      items: orderItems,
+      shippingAddress: shippingAddress,
+    };
+
+    // Send order confirmation email
+    await sendUserOrderEmail(emailDetails);
+
     return NextResponse.json(
       {
         success: true,
@@ -190,38 +202,39 @@ export const GET = async (req: NextRequest) => {
     // Get query parameters
     const url = new URL(req.url);
     const orderId = url.searchParams.get("orderId");
-    
+
     if (orderId) {
       // Return a specific order with all details
-      const order = await Order.findOne({ 
-        orderId, 
-        user: userId 
+      const order = await Order.findOne({
+        orderId,
+        user: userId,
       })
-      .populate({
-        path: 'shippingAddress',
-        model: 'Address'
-      })
-      .populate({
-        path: 'items.product',
-        model: 'Product',
-        select: 'name description category tags img stockQuantity mrp price unit'
-      });
-      
+        .populate({
+          path: "shippingAddress",
+          model: "Address",
+        })
+        .populate({
+          path: "items.product",
+          model: "Product",
+          select:
+            "name description category tags img stockQuantity mrp price unit",
+        });
+
       if (!order) {
         return NextResponse.json(
           { success: false, msg: "Order not found" },
           { status: 404 }
         );
       }
-      
+
       return NextResponse.json(
-        { 
-          success: true, 
+        {
+          success: true,
           order: {
             _id: order._id,
             orderId: order.orderId,
             user: order.user,
-            items: order.items.map(item => ({
+            items: order.items.map((item) => ({
               _id: item._id,
               product: {
                 _id: item.product._id,
@@ -233,14 +246,14 @@ export const GET = async (req: NextRequest) => {
                 stockQuantity: item.product.stockQuantity,
                 mrp: item.product.mrp,
                 price: item.product.price,
-                unit: item.product.unit
+                unit: item.product.unit,
               },
               name: item.name,
               price: item.price,
               mrp: item.mrp,
               quantity: item.quantity,
               total: item.total,
-              img: item.img
+              img: item.img,
             })),
             mrpTotal: order.mrpTotal,
             subtotal: order.subtotal,
@@ -257,15 +270,15 @@ export const GET = async (req: NextRequest) => {
               country: order.shippingAddress.country,
               state: order.shippingAddress.state,
               addressType: order.shippingAddress.addressType,
-              zipCode: order.shippingAddress.zipCode
+              zipCode: order.shippingAddress.zipCode,
             },
             status: order.status,
             paymentStatus: order.paymentStatus,
             paymentMethod: order.paymentMethod,
             expectedDelivery: order.expectedDelivery,
             createdAt: order.createdAt,
-            updatedAt: order.updatedAt
-          }
+            updatedAt: order.updatedAt,
+          },
         },
         { status: 200 }
       );
@@ -274,20 +287,21 @@ export const GET = async (req: NextRequest) => {
       const orders = await Order.find({ user: userId })
         .sort({ createdAt: -1 })
         .populate({
-          path: 'shippingAddress',
-          model: 'Address'
+          path: "shippingAddress",
+          model: "Address",
         })
         .populate({
-          path: 'items.product',
-          model: 'Product',
-          select: 'name description category tags img stockQuantity mrp price unit'
+          path: "items.product",
+          model: "Product",
+          select:
+            "name description category tags img stockQuantity mrp price unit",
         });
-      
+
       // Transform orders to include comprehensive details
-      const transformedOrders = orders.map(order => ({
+      const transformedOrders = orders.map((order) => ({
         _id: order._id,
         orderId: order.orderId,
-        items: order.items.map(item => ({
+        items: order.items.map((item) => ({
           _id: item._id,
           product: {
             _id: item.product._id,
@@ -299,14 +313,14 @@ export const GET = async (req: NextRequest) => {
             stockQuantity: item.product.stockQuantity,
             mrp: item.product.mrp,
             price: item.product.price,
-            unit: item.product.unit
+            unit: item.product.unit,
           },
           name: item.name,
           price: item.price,
           mrp: item.mrp,
           quantity: item.quantity,
           total: item.total,
-          img: item.img
+          img: item.img,
         })),
         mrpTotal: order.mrpTotal,
         subtotal: order.subtotal,
@@ -323,20 +337,20 @@ export const GET = async (req: NextRequest) => {
           country: order.shippingAddress.country,
           state: order.shippingAddress.state,
           addressType: order.shippingAddress.addressType,
-          zipCode: order.shippingAddress.zipCode
+          zipCode: order.shippingAddress.zipCode,
         },
         status: order.status,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,
         expectedDelivery: order.expectedDelivery,
         createdAt: order.createdAt,
-        updatedAt: order.updatedAt
+        updatedAt: order.updatedAt,
       }));
-      
+
       return NextResponse.json(
-        { 
-          success: true, 
-          orders: transformedOrders 
+        {
+          success: true,
+          orders: transformedOrders,
         },
         { status: 200 }
       );

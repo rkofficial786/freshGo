@@ -139,7 +139,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           items,
           shippingAddressId: selectedAddressId,
           paymentMethod,
-          couponCode: summary.couponDiscount,
+          couponDiscount: summary.couponDiscount,
         }),
       });
 

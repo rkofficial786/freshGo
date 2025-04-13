@@ -1,94 +1,58 @@
-import React, { useState, useEffect, useRef } from "react";
-import { X, ChevronDown, ChevronUp, Check } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 import ButtonMain from "@/components/ButtonMain";
 
-const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
-  const [filters, setFilters] = useState({
+// Categories
+export const categories = [
+  'Fruits', 
+  'Vegetables', 
+  'Dairy', 
+  'Bakery', 
+  'Meat', 
+  'Seafood', 
+  'Snacks', 
+  'Beverages', 
+  'Frozen', 
+  'Household', 
+  'Other'
+];
+
+// Define types for filter state and active sections
+interface Filters {
+  sort: string;
+  category: string;
+  price: [number, number];
+}
+
+interface ActiveSections {
+  sort: boolean;
+  category: boolean;
+  price: boolean;
+}
+
+const FilterComponent: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onApplyFilters: (filters: Filters) => void;
+}> = ({ isOpen, onClose, onApplyFilters }) => {
+  const [filters, setFilters] = useState<Filters>({
     sort: "",
-    discount: { value: 0 },
-    material: [],
-    color: [],
-    size: [],
-    price: [0, 20000],
+    category: "",
+    price: [0, 2000],
   });
-  const [activeSections, setActiveSections] = useState({
+
+  const [activeSections, setActiveSections] = useState<ActiveSections>({
     sort: false,
-    discount: false,
-    material: false,
-    color: false,
-    size: false,
+    category: false,
     price: false,
   });
-  const [showAllColors, setShowAllColors] = useState(false);
-  const filterRef = useRef(null);
-  const crossRef = useRef(null);
 
-  const allColors = [
-    "red",
-    "blue",
-    "green",
-    "yellow",
-    "purple",
-    "pink",
-    "black",
-    "white",
-    "orange",
-    "brown",
-    "gray",
-    "cyan",
-    "magenta",
-    "lime",
-    "teal",
-    "indigo",
-    "violet",
-    "maroon",
-    "navy",
-    "olive",
-    "silver",
-    "gold",
-    "beige",
-    "turquoise",
-    "coral",
-    "crimson",
-    "fuchsia",
-    "khaki",
-    "lavender",
-    "plum",
-    "salmon",
-    "tan",
-  ];
-
-  const sizeOptions = [
-    "M",
-    "L",
-    "XL",
-    "XXL",
-    "3XL",
-    "4XL",
-    "5XL",
-    "6XL",
-    "Others",
-    "Freesize",
-  ];
-
-  const materialOptions = [
-    "Cotton",
-    "Jimmy-choo",
-    "Roman Tissue",
-    "Fansy pattu",
-    "Semi pattu",
-    "Kanchi pattu",
-    "Banaras",
-    "Silk",
-    "Tissue",
-    "Capsule",
-  ];
+  const filterRef = useRef<HTMLDivElement>(null);
+  const crossRef = useRef<HTMLButtonElement>(null);
 
   const sortOptions = [
     { value: "priceLowToHigh", label: "Price: Low to High" },
@@ -96,30 +60,30 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
     { value: "newlyArrived", label: "Newly Arrived" },
   ];
 
-  const handleSectionToggle = (section) => {
-    setActiveSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  const handleSectionToggle = (section: keyof ActiveSections) => {
+    setActiveSections((prev) => {
+      const newState = Object.keys(prev).reduce((acc, key) => ({
+        ...acc, 
+        [key]: key === section ? !prev[key as keyof ActiveSections] : false
+      }), {} as ActiveSections);
+      return newState;
+    });
   };
 
-  const handleCheckboxChange = (category, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [category]: prev[category].includes(value)
-        ? prev[category].filter((item) => item !== value)
-        : [...prev[category], value],
+  const handleCategoryChange = (category: string) => {
+    setFilters((prev) => ({ 
+      ...prev, 
+      category: prev.category === category ? "" : category 
     }));
   };
 
-  const handleSortChange = (value) => {
+  const handleSortChange = (value: string) => {
     setFilters((prev) => ({ ...prev, sort: value }));
     setActiveSections((prev) => ({ ...prev, sort: false }));
   };
 
-  const handlePriceChange = (value) => {
+  const handlePriceChange = (value: [number, number]) => {
     setFilters((prev) => ({ ...prev, price: value }));
-  };
-
-  const handleDiscountChange = (value) => {
-    setFilters((prev) => ({ ...prev, discount: { value } }));
   };
 
   const handleApply = () => {
@@ -128,28 +92,17 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
   };
 
   const handleClearFilters = () => {
-    setFilters({
+    const defaultFilters: Filters = {
       sort: "",
-      discount: { value: 0 },
-      material: [],
-      color: [],
-      size: [],
-      price: [0, 100000],
-    });
-    onApplyFilters({
-      sort: "",
-      discount: { value: 0 },
-      material: [],
-      color: [],
-      size: [],
-      price: [0, 100000],
-    });
+      category: "",
+      price: [0, 2000],
+    };
+    setFilters(defaultFilters);
+    onApplyFilters(defaultFilters);
     onClose();
   };
 
   useOnClickOutside(filterRef, crossRef, onClose);
-
-  const visibleColors = showAllColors ? allColors : allColors.slice(0, 20);
 
   return (
     <div
@@ -161,11 +114,11 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
         ref={filterRef}
         className={`absolute inset-y-0 left-0 w-96 bg-white shadow-lg transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } transition-transform duration-300 ease-in-out overflow-y-auto`}
+        } transition-transform duration-300 ease-in-out flex flex-col`}
       >
-        <div className="p-6">
+        <div className="p-6 flex-grow overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Filters</h2>
+            <h2 className="text-2xl font-bold text-neutral-900">Filters</h2>
             <Button
               ref={crossRef}
               variant="ghost"
@@ -179,18 +132,18 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
 
           <div className="space-y-6">
             {/* Sort By Section */}
-            <div className="border-b border-gray-200 pb-4">
+            <div className="border-b border-neutral-200 pb-4">
               <button
                 onClick={() => handleSectionToggle("sort")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-gray-700">
+                <span className="text-lg font-semibold text-neutral-800">
                   Sort By
                 </span>
                 {activeSections.sort ? (
-                  <ChevronUp className="h-5 w-5" />
+                  <ChevronUp className="h-5 w-5 text-neutral-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5" />
+                  <ChevronDown className="h-5 w-5 text-neutral-600" />
                 )}
               </button>
               {activeSections.sort && (
@@ -201,8 +154,8 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
                       onClick={() => handleSortChange(option.value)}
                       className={`w-full text-left py-2 px-3 rounded-md ${
                         filters.sort === option.value
-                          ? "bg-blue-100 text-blue-700"
-                          : "hover:bg-gray-100"
+                          ? "bg-neutral-200 text-neutral-900"
+                          : "hover:bg-neutral-100"
                       }`}
                     >
                       {option.label}
@@ -212,193 +165,58 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
               )}
             </div>
 
-            {/* Discount Section */}
-            <div className="border-b border-gray-200 pb-4">
+            {/* Category Section */}
+            <div className="border-b border-neutral-200 pb-4">
               <button
-                onClick={() => handleSectionToggle("discount")}
+                onClick={() => handleSectionToggle("category")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-gray-700">
-                  Discount
+                <span className="text-lg font-semibold text-neutral-800">
+                  Category
                 </span>
-                {activeSections.discount ? (
-                  <ChevronUp className="h-5 w-5" />
+                {activeSections.category ? (
+                  <ChevronUp className="h-5 w-5 text-neutral-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5" />
+                  <ChevronDown className="h-5 w-5 text-neutral-600" />
                 )}
               </button>
-              {activeSections.discount && (
-                <div className="mt-4">
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={10}
-                    value={filters.discount.value}
-                    onChange={handleDiscountChange}
-                    trackStyle={{ backgroundColor: "#3B82F6" }}
-                    handleStyle={{
-                      borderColor: "#3B82F6",
-                      backgroundColor: "#3B82F6",
-                    }}
-                  />
-                  <div className="text-sm text-gray-600 mt-2">
-                    {filters.discount.value}% off or more
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Size Section */}
-            <div className="border-b border-gray-200 pb-4">
-              <button
-                onClick={() => handleSectionToggle("size")}
-                className="flex justify-between items-center w-full text-left"
-              >
-                <span className="text-lg font-semibold text-gray-700">
-                  Size
-                </span>
-                {activeSections.size ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </button>
-              {activeSections.size && (
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {sizeOptions.map((size) => (
-                    <div key={size} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`size-${size}`}
-                        checked={filters.size.includes(size)}
-                        onCheckedChange={() =>
-                          handleCheckboxChange("size", size)
-                        }
-                        className="text-blue-600 focus:ring-blue-500"
+              {activeSections.category && (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {categories.map((category) => (
+                    <div key={category} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id={`category-${category}`}
+                        name="category"
+                        checked={filters.category === category}
+                        onChange={() => handleCategoryChange(category)}
+                        className="text-neutral-900 focus:ring-neutral-900"
                       />
                       <label
-                        htmlFor={`size-${size}`}
-                        className="text-sm text-gray-600"
+                        htmlFor={`category-${category}`}
+                        className="text-sm text-neutral-700"
                       >
-                        {size}
+                        {category}
                       </label>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Material Section */}
-            <div className="border-b border-gray-200 pb-4">
-              <button
-                onClick={() => handleSectionToggle("material")}
-                className="flex justify-between items-center w-full text-left"
-              >
-                <span className="text-lg font-semibold text-gray-700">
-                  Material
-                </span>
-                {activeSections.material ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </button>
-              {activeSections.material && (
-                <div className="mt-2 space-y-2">
-                  {materialOptions.map((material) => (
-                    <div key={material} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`material-${material}`}
-                        checked={filters.material.includes(material)}
-                        onCheckedChange={() =>
-                          handleCheckboxChange("material", material)
-                        }
-                        className="text-blue-600 focus:ring-blue-500"
-                      />
-                      <label
-                        htmlFor={`material-${material}`}
-                        className="text-sm text-gray-600"
-                      >
-                        {material}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Color Section */}
-            <div className="border-b border-gray-200 pb-4">
-              <button
-                onClick={() => handleSectionToggle("color")}
-                className="flex justify-between items-center w-full text-left"
-              >
-                <span className="text-lg font-semibold text-gray-700">
-                  Color
-                </span>
-                {activeSections.color ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </button>
-              {activeSections.color && (
-                <>
-                  <div className="mt-2 grid grid-cols-6 gap-2">
-                    {visibleColors.map((color) => (
-                      <button
-                        key={color}
-                        title={color}
-                        className={`
-                          w-8 h-8 rounded-full cursor-pointer border-2 
-                          ${
-                            filters.color.includes(color)
-                              ? "border-gray-800"
-                              : "border-gray-300"
-                          } 
-                          hover:scale-110 transition-transform flex items-center justify-center
-                        `}
-                        style={{ backgroundColor: color }}
-                        onClick={() => handleCheckboxChange("color", color)}
-                      >
-                        {filters.color.includes(color) && (
-                          <Check
-                            className={`h-4 w-4 ${
-                              ["white", "yellow", "beige"].includes(color)
-                                ? "text-black"
-                                : "text-white"
-                            }`}
-                          />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  {allColors.length > 20 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 w-full"
-                      onClick={() => setShowAllColors(!showAllColors)}
-                    >
-                      {showAllColors ? "Show Less" : "Show More"}
-                    </Button>
-                  )}
-                </>
               )}
             </div>
 
             {/* Price Range Section */}
-            <div className="border-b border-gray-200 pb-4">
+            <div className="border-b border-neutral-200 pb-4">
               <button
                 onClick={() => handleSectionToggle("price")}
                 className="flex justify-between items-center w-full text-left"
               >
-                <span className="text-lg font-semibold text-gray-700">
+                <span className="text-lg font-semibold text-neutral-800">
                   Price Range
                 </span>
                 {activeSections.price ? (
-                  <ChevronUp className="h-5 w-5" />
+                  <ChevronUp className="h-5 w-5 text-neutral-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5" />
+                  <ChevronDown className="h-5 w-5 text-neutral-600" />
                 )}
               </button>
               {activeSections.price && (
@@ -406,17 +224,17 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
                   <Slider
                     range
                     min={0}
-                    max={20000}
+                    max={2000}
                     step={100}
                     value={filters.price}
-                    onChange={handlePriceChange}
-                    trackStyle={{ backgroundColor: "#3B82F6" }}
+                    onChange={handlePriceChange as any}
+                    trackStyle={{ backgroundColor: "#000" }}
                     handleStyle={[
-                      { borderColor: "#3B82F6", backgroundColor: "#3B82F6" },
-                      { borderColor: "#3B82F6", backgroundColor: "#3B82F6" },
+                      { borderColor: "#000", backgroundColor: "#000" },
+                      { borderColor: "#000", backgroundColor: "#000" },
                     ]}
                   />
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <div className="flex justify-between text-sm text-neutral-600 mt-2">
                     <span>₹{filters.price[0]}</span>
                     <span>₹{filters.price[1]}</span>
                   </div>
@@ -424,13 +242,19 @@ const FilterComponent = ({ isOpen, onClose, onApplyFilters }) => {
               )}
             </div>
           </div>
+        </div>
 
-          <div className="mt-8 space-y-4">
-            <ButtonMain className="w-full  text-white" onClick={handleApply}>
+        {/* Fixed Bottom Buttons */}
+        <div className="p-6 border-t border-neutral-200 bg-white">
+          <div className="space-y-4">
+            <ButtonMain 
+              className="w-full bg-black text-white hover:bg-neutral-800" 
+              onClick={handleApply}
+            >
               Apply Filters
             </ButtonMain>
             <Button
-              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800"
+              className="w-full bg-neutral-200 hover:bg-neutral-300 text-neutral-900"
               onClick={handleClearFilters}
             >
               Clear All Filters

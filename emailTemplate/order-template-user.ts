@@ -66,31 +66,41 @@ export const orderUserTemplate = (order: any) =>`
         </div>
         <div class="order-info">
             <p><strong>Order Number:</strong> ${order.orderId}</p>
-            <p><strong>Date:</strong> ${new Date(order?.updatedAt).toLocaleString().split(',')[0]}</p>
-            <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+            <p><strong>Date:</strong> ${order.orderDate}</p>
+            <p><strong>Payment Method:</strong> COD</p>
         </div>
         <div class="order-info">
             <p><strong>Shipping Address:</strong></p>
-            <p>${order.user.name}<br>
-            ${order.shippingAddress.address}<br>
-            ${order.shippingAddress.state} ${order.shippingAddress.zipCode}<br>
-            ${order.shippingAddress.country}</p>
+            <p>${order.user.defaultAddress.name}<br>
+            ${order.user.defaultAddress.address}<br>
+            ${order.user.defaultAddress.state} ${order.user.defaultAddress.zipCode}<br>
+            ${order.user.defaultAddress.country}</p>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Item</th>
                     <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody>
-                ${order.productDetails.map((item:any) => (
-                `<tr>
-                    <td>${item.product.name}</td>
-                    <td>${item.count}</td>
-                </tr>`
-                ))}
+                ${order.items.map((item:any) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${item.total.toFixed(2)}</td>
+                </tr>
+                `).join('')}
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td><strong>₹${order.totalAmount}</strong></td>
+                </tr>
+            </tfoot>
         </table>
         <div class="footer">
             <p>Thank you for your order! If you have any questions, please contact our customer support.</p>
@@ -98,4 +108,4 @@ export const orderUserTemplate = (order: any) =>`
     </div>
 </body>
 </html>
-`
+`;
